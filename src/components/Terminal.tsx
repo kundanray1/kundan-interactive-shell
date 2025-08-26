@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Command, Terminal as TerminalIcon, Copy, Minimize2, Maximize2, X } from 'lucide-react';
+import { getAIResponse } from '@/lib/openai';
 
 interface TerminalProps {
   onSectionChange?: (section: string) => void;
@@ -77,7 +78,7 @@ const Terminal = ({ onSectionChange }: TerminalProps) => {
     }
   };
 
-  const parseCommand = (cmd: string): CommandHistory => {
+  const parseCommand = async (cmd: string): Promise<CommandHistory> => {
     const parts = cmd.trim().toLowerCase().split(' ');
     const command = parts[0];
     const args = parts.slice(1);
@@ -300,11 +301,10 @@ const Terminal = ({ onSectionChange }: TerminalProps) => {
         };
 
       case 'clear':
-        setHistory([]);
         return {
-          command: cmd,
+          command: 'clear',
           output: [],
-          type: 'success'
+          type: 'info'
         };
 
       case 'theme':
@@ -327,34 +327,29 @@ const Terminal = ({ onSectionChange }: TerminalProps) => {
         };
 
       default:
+        const ai = await getAIResponse(cmd, resumeData);
         return {
           command: cmd,
-          output: [
-            `Command "${command}" not found.`,
-            'Type "help" to see available commands.'
-          ],
-          type: 'error'
+          output: [ai],
+          type: 'info'
         };
     }
-
-    return {
-      command: cmd,
-      output: ['Command not implemented yet.'],
-      type: 'error'
-    };
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
 
-    const result = parseCommand(input);
-    
-    if (result.command !== 'clear') {
+    const cmd = input;
+    const result = await parseCommand(cmd);
+
+    if (result.command === 'clear') {
+      setHistory([]);
+    } else {
       setHistory(prev => [...prev, result]);
     }
-    
-    setCommandHistory(prev => [...prev, input]);
+
+    setCommandHistory(prev => [...prev, cmd]);
     setHistoryIndex(-1);
     setInput('');
   };
