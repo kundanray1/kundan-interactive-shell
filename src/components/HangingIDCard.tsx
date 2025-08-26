@@ -15,9 +15,9 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
   const [lanyardStretch, setLanyardStretch] = useState(0);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handlePointerDown = (e: React.PointerEvent) => {
     if (!cardRef.current) return;
-    
+
     const rect = cardRef.current.getBoundingClientRect();
     setDragOffset({
       x: e.clientX - rect.left - position.x,
@@ -26,65 +26,61 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
     setIsDragging(true);
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging || !cardRef.current) return;
-    
-    const container = cardRef.current.parentElement;
-    if (!container) return;
-    
-    const containerRect = container.getBoundingClientRect();
-    const cardRect = cardRef.current.getBoundingClientRect();
-    
-    const newX = e.clientX - containerRect.left - dragOffset.x;
-    const newY = e.clientY - containerRect.top - dragOffset.y;
-    
-    // Constrain to container bounds with more realistic movement
-    const maxX = containerRect.width - cardRect.width;
-    const maxY = containerRect.height - cardRect.height - 100; // Account for lanyard
-    
-    const constrainedX = Math.max(-50, Math.min(maxX + 50, newX));
-    const constrainedY = Math.max(50, Math.min(maxY, newY));
-    
-    setPosition({
-      x: constrainedX,
-      y: constrainedY
-    });
-
-    // Calculate lanyard stretch based on distance from center
-    const centerX = containerRect.width / 2;
-    const distanceFromCenter = Math.abs(constrainedX + cardRect.width / 2 - centerX);
-    const stretch = Math.min(distanceFromCenter * 0.3, 30);
-    setLanyardStretch(stretch);
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-    // Gentle bounce back effect
-    setTimeout(() => {
-      setLanyardStretch(0);
-    }, 200);
-  };
-
   useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = 'grabbing';
-      document.body.style.userSelect = 'none';
-    } else {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    }
+    if (!isDragging) return;
+
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!cardRef.current) return;
+
+      const container = cardRef.current.parentElement;
+      if (!container) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const cardRect = cardRef.current.getBoundingClientRect();
+
+      const newX = e.clientX - containerRect.left - dragOffset.x;
+      const newY = e.clientY - containerRect.top - dragOffset.y;
+
+      // Constrain to container bounds with more realistic movement
+      const maxX = containerRect.width - cardRect.width;
+      const maxY = containerRect.height - cardRect.height - 100; // Account for lanyard
+
+      const constrainedX = Math.max(-50, Math.min(maxX + 50, newX));
+      const constrainedY = Math.max(50, Math.min(maxY, newY));
+
+      setPosition({
+        x: constrainedX,
+        y: constrainedY
+      });
+
+      // Calculate lanyard stretch based on distance from center
+      const centerX = containerRect.width / 2;
+      const distanceFromCenter = Math.abs(constrainedX + cardRect.width / 2 - centerX);
+      const stretch = Math.min(distanceFromCenter * 0.3, 30);
+      setLanyardStretch(stretch);
+    };
+
+    const handlePointerUp = () => {
+      setIsDragging(false);
+      // Gentle bounce back effect
+      setTimeout(() => {
+        setLanyardStretch(0);
+      }, 200);
+    };
+
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+    document.body.style.cursor = 'grabbing';
+    document.body.style.userSelect = 'none';
 
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
     };
   }, [isDragging, dragOffset]);
+
 
   const sections = [
     { id: 'about', title: 'About', icon: '👨‍💻' },
@@ -169,7 +165,7 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
           transform: `rotate(${(position.x * 0.02) + (lanyardStretch * 0.01)}deg)`,
           cursor: isDragging ? 'grabbing' : 'grab'
         }}
-        onMouseDown={handleMouseDown}
+        onPointerDown={handlePointerDown}
       >
         {/* Card Shadow */}
         <div className="absolute inset-0 bg-black/20 rounded-lg blur-sm transform translate-y-3 translate-x-1 opacity-40" />
