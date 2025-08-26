@@ -2,95 +2,114 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Modern Interactive Resume Design System */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
+    /* Base colors - Dark theme optimized */
+    --background: 220 27% 8%;
+    --foreground: 210 40% 98%;
+    
+    /* Visual pane colors */
+    --visual-bg: 220 25% 12%;
+    --visual-card: 220 20% 15%;
+    --visual-border: 220 15% 25%;
+    
+    /* Terminal colors */
+    --terminal-bg: 220 30% 5%;
+    --terminal-chrome: 220 25% 10%;
+    --terminal-text: 165 80% 75%;
+    --terminal-accent: 165 90% 85%;
+    --terminal-prompt: 45 100% 70%;
+    --terminal-error: 0 75% 65%;
+    --terminal-success: 120 75% 65%;
+    
+    /* Interactive elements */
+    --accent-primary: 165 80% 65%;
+    --accent-secondary: 265 75% 70%;
+    --accent-tertiary: 45 90% 70%;
+    
+    /* Card system */
+    --card: 220 20% 15%;
+    --card-foreground: 210 40% 98%;
+    --card-hover: 220 20% 18%;
+    --card-shadow: 220 30% 5%;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(165 80% 65% / 0.1), hsl(265 75% 70% / 0.1));
+    --gradient-card: linear-gradient(135deg, hsl(220 20% 15%), hsl(220 25% 12%));
+    --gradient-terminal: linear-gradient(180deg, hsl(220 30% 5%), hsl(220 25% 8%));
+    
+    /* Shadows */
+    --shadow-neumorphic: 
+      6px 6px 12px hsl(220 30% 5% / 0.3),
+      -6px -6px 12px hsl(220 20% 20% / 0.1);
+    --shadow-terminal: 0 8px 32px hsl(220 30% 5% / 0.4);
+    --shadow-card: 0 4px 16px hsl(220 30% 5% / 0.2);
+    
+    /* Animation timing */
+    --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --smooth-ease: cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Typography */
+    --font-mono: 'JetBrains Mono', 'Fira Code', Monaco, 'Cascadia Code', monospace;
+    --font-display: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    
+    /* Spacing system */
+    --space-terminal: 1.5rem;
+    --space-card: 1.25rem;
+    
+    /* Border radius */
+    --radius-sm: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-terminal: 0.625rem;
+    
+    /* Standard shadcn vars for compatibility */
+    --primary: 165 80% 65%;
+    --primary-foreground: 220 30% 5%;
+    --secondary: 220 20% 15%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 220 15% 25%;
+    --muted-foreground: 220 10% 60%;
+    --border: 220 15% 25%;
+    --input: 220 20% 15%;
+    --ring: 165 80% 65%;
+    --destructive: 0 75% 65%;
     --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --radius: 0.75rem;
   }
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+  /* Light mode overrides */
+  .light {
+    --background: 210 40% 98%;
+    --foreground: 220 27% 8%;
+    --visual-bg: 210 30% 96%;
+    --visual-card: 0 0% 100%;
+    --visual-border: 220 15% 85%;
+    --terminal-bg: 220 30% 95%;
+    --terminal-chrome: 220 25% 90%;
+    --terminal-text: 220 30% 8%;
+    --card: 0 0% 100%;
+    --card-shadow: 220 15% 85%;
+    --shadow-neumorphic: 
+      6px 6px 12px hsl(220 15% 85% / 0.3),
+      -6px -6px 12px hsl(0 0% 100% / 0.8);
+  }
+}
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-family: var(--font-display);
+  }
+  
+  .font-mono {
+    font-family: var(--font-mono);
   }
 }
 

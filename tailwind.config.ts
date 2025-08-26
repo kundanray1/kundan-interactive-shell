@@ -40,55 +40,94 @@ export default {
 					DEFAULT: 'hsl(var(--muted))',
 					foreground: 'hsl(var(--muted-foreground))'
 				},
-				accent: {
-					DEFAULT: 'hsl(var(--accent))',
-					foreground: 'hsl(var(--accent-foreground))'
-				},
-				popover: {
-					DEFAULT: 'hsl(var(--popover))',
-					foreground: 'hsl(var(--popover-foreground))'
-				},
+				// Custom resume site colors
+				'visual-bg': 'hsl(var(--visual-bg))',
+				'visual-card': 'hsl(var(--visual-card))',
+				'visual-border': 'hsl(var(--visual-border))',
+				'terminal-bg': 'hsl(var(--terminal-bg))',
+				'terminal-chrome': 'hsl(var(--terminal-chrome))',
+				'terminal-text': 'hsl(var(--terminal-text))',
+				'terminal-accent': 'hsl(var(--terminal-accent))',
+				'terminal-prompt': 'hsl(var(--terminal-prompt))',
+				'terminal-error': 'hsl(var(--terminal-error))',
+				'terminal-success': 'hsl(var(--terminal-success))',
+				'accent-primary': 'hsl(var(--accent-primary))',
+				'accent-secondary': 'hsl(var(--accent-secondary))',
+				'accent-tertiary': 'hsl(var(--accent-tertiary))',
 				card: {
 					DEFAULT: 'hsl(var(--card))',
-					foreground: 'hsl(var(--card-foreground))'
-				},
-				sidebar: {
-					DEFAULT: 'hsl(var(--sidebar-background))',
-					foreground: 'hsl(var(--sidebar-foreground))',
-					primary: 'hsl(var(--sidebar-primary))',
-					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-					accent: 'hsl(var(--sidebar-accent))',
-					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-					border: 'hsl(var(--sidebar-border))',
-					ring: 'hsl(var(--sidebar-ring))'
+					foreground: 'hsl(var(--card-foreground))',
+					hover: 'hsl(var(--card-hover))',
+					shadow: 'hsl(var(--card-shadow))'
 				}
 			},
+			fontFamily: {
+				mono: 'var(--font-mono)',
+				display: 'var(--font-display)'
+			},
+			backgroundImage: {
+				'gradient-primary': 'var(--gradient-primary)',
+				'gradient-card': 'var(--gradient-card)',
+				'gradient-terminal': 'var(--gradient-terminal)'
+			},
+			boxShadow: {
+				'neumorphic': 'var(--shadow-neumorphic)',
+				'terminal': 'var(--shadow-terminal)',
+				'card-custom': 'var(--shadow-card)'
+			},
 			borderRadius: {
-				lg: 'var(--radius)',
-				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
+				'terminal': 'var(--radius-terminal)',
+				lg: 'var(--radius-lg)',
+				md: 'var(--radius-md)',
+				sm: 'var(--radius-sm)'
+			},
+			spacing: {
+				'terminal': 'var(--space-terminal)',
+				'card': 'var(--space-card)'
 			},
 			keyframes: {
 				'accordion-down': {
-					from: {
-						height: '0'
-					},
-					to: {
-						height: 'var(--radix-accordion-content-height)'
-					}
+					from: { height: '0' },
+					to: { height: 'var(--radix-accordion-content-height)' }
 				},
 				'accordion-up': {
-					from: {
-						height: 'var(--radix-accordion-content-height)'
-					},
-					to: {
-						height: '0'
-					}
+					from: { height: 'var(--radix-accordion-content-height)' },
+					to: { height: '0' }
+				},
+				'spring-bounce': {
+					'0%': { transform: 'scale(0.8)', opacity: '0' },
+					'50%': { transform: 'scale(1.05)', opacity: '0.8' },
+					'100%': { transform: 'scale(1)', opacity: '1' }
+				},
+				'slide-up': {
+					'0%': { transform: 'translateY(20px)', opacity: '0' },
+					'100%': { transform: 'translateY(0)', opacity: '1' }
+				},
+				'glow-pulse': {
+					'0%, 100%': { boxShadow: '0 0 20px hsl(var(--accent-primary) / 0.3)' },
+					'50%': { boxShadow: '0 0 40px hsl(var(--accent-primary) / 0.6)' }
+				},
+				'terminal-cursor': {
+					'0%, 50%': { opacity: '1' },
+					'51%, 100%': { opacity: '0' }
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0px)' },
+					'50%': { transform: 'translateY(-10px)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'spring-bounce': 'spring-bounce 0.6s var(--spring-bounce)',
+				'slide-up': 'slide-up 0.4s var(--smooth-ease)',
+				'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
+				'cursor': 'terminal-cursor 1s infinite',
+				'float': 'float 3s ease-in-out infinite'
+			},
+			transitionTimingFunction: {
+				'spring': 'var(--spring-bounce)',
+				'smooth': 'var(--smooth-ease)'
 			}
 		}
 	},
