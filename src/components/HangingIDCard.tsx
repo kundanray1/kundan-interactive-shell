@@ -333,8 +333,10 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
       </div>
 
       {/* Drag Instruction */}
-      <div className="absolute top-4 right-4 text-xs text-muted-foreground font-mono opacity-60">
-        🖱️ Pull the lanyard to move
+      <div className="absolute top-4 right-4 text-xs font-mono">
+        <div className="bg-black/80 text-white px-2 py-1 rounded-md shadow-lg backdrop-blur-sm">
+          🖱️ Pull the lanyard to move
+        </div>
       </div>
 
       {/* Bottom Navigation Tags */}

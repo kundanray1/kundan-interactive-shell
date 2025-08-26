@@ -580,7 +580,7 @@ const Terminal = ({ onSectionChange }: TerminalProps) => {
   };
 
   return (
-    <div className="h-96 w-full max-w-4xl bg-terminal-bg border border-visual-border rounded-terminal shadow-terminal">
+    <div className="h-screen w-full max-w-4xl bg-terminal-bg border border-visual-border rounded-terminal shadow-terminal flex flex-col">
       {/* Terminal Header */}
       <div className="flex items-center justify-between px-4 py-2 bg-terminal-chrome border-b border-visual-border rounded-t-terminal">
         <div className="flex items-center space-x-2">
@@ -601,7 +601,7 @@ const Terminal = ({ onSectionChange }: TerminalProps) => {
       {/* Terminal Content */}
       <div 
         ref={terminalRef}
-        className="h-80 overflow-y-auto p-terminal font-mono text-sm"
+        className="flex-1 overflow-y-auto p-terminal font-mono text-sm"
       >
         {/* Command History */}
         {history.map((item, index) => (
