@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { Phone, Mail, MapPin, Globe, Github, Linkedin, Coffee } from 'lucide-react';
+import { Phone, Mail, MapPin, Globe, Github, Linkedin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import profilePhoto from '@/assets/profile-photo.jpg';
 
 interface HangingIDCardProps {
   activeSection?: string;
@@ -11,6 +12,7 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [lanyardStretch, setLanyardStretch] = useState(0);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -36,18 +38,31 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
     const newX = e.clientX - containerRect.left - dragOffset.x;
     const newY = e.clientY - containerRect.top - dragOffset.y;
     
-    // Constrain to container bounds
+    // Constrain to container bounds with more realistic movement
     const maxX = containerRect.width - cardRect.width;
-    const maxY = containerRect.height - cardRect.height;
+    const maxY = containerRect.height - cardRect.height - 100; // Account for lanyard
+    
+    const constrainedX = Math.max(-50, Math.min(maxX + 50, newX));
+    const constrainedY = Math.max(50, Math.min(maxY, newY));
     
     setPosition({
-      x: Math.max(0, Math.min(maxX, newX)),
-      y: Math.max(0, Math.min(maxY, newY))
+      x: constrainedX,
+      y: constrainedY
     });
+
+    // Calculate lanyard stretch based on distance from center
+    const centerX = containerRect.width / 2;
+    const distanceFromCenter = Math.abs(constrainedX + cardRect.width / 2 - centerX);
+    const stretch = Math.min(distanceFromCenter * 0.3, 30);
+    setLanyardStretch(stretch);
   };
 
   const handleMouseUp = () => {
     setIsDragging(false);
+    // Gentle bounce back effect
+    setTimeout(() => {
+      setLanyardStretch(0);
+    }, 200);
   };
 
   useEffect(() => {
@@ -79,11 +94,13 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
     { id: 'contact', title: 'Contact', icon: '✉️' }
   ];
 
-  const handleCall = (type: 'phone' | 'email') => {
+  const handleCall = (type: 'phone' | 'email' | 'website') => {
     if (type === 'phone') {
       window.open('tel:+977-9800000000');
-    } else {
+    } else if (type === 'email') {
       window.open('mailto:hello@kundan.ray');
+    } else {
+      window.open('https://kundanray.com.np', '_blank');
     }
   };
 
@@ -94,118 +111,167 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
       <div className="absolute top-20 left-10 w-32 h-32 bg-accent-primary/5 rounded-full blur-xl animate-float" />
       <div className="absolute bottom-20 right-10 w-24 h-24 bg-accent-secondary/5 rounded-full blur-xl animate-float" style={{ animationDelay: '1s' }} />
 
-      {/* Lanyard */}
-      <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-40 overflow-hidden">
-        <div className="w-full h-full bg-gradient-to-b from-accent-primary to-accent-secondary relative">
-          {/* Repeating text on lanyard */}
-          <div className="absolute inset-0 flex flex-col items-center justify-start text-[8px] font-mono text-primary-foreground/80 leading-tight pt-2">
-            {Array.from({ length: 8 }, (_, i) => (
-              <div key={i} className="whitespace-nowrap transform rotate-90 mb-4">
+      {/* Neck Straps - Two straps from top corners */}
+      <div className="absolute top-0 left-0 right-0 h-60">
+        {/* Left Strap */}
+        <div 
+          className="absolute top-0 left-1/4 w-4 bg-gradient-to-b from-accent-primary to-accent-secondary transform origin-top transition-transform duration-200"
+          style={{
+            height: `${160 + lanyardStretch}px`,
+            transform: `translateX(${position.x * 0.3}px) rotate(${position.x * 0.05}deg)`
+          }}
+        >
+          {/* Repeating text on left strap */}
+          <div className="absolute inset-0 flex flex-col items-center justify-start text-[6px] font-mono text-primary-foreground/80 leading-tight pt-4">
+            {Array.from({ length: 12 }, (_, i) => (
+              <div key={i} className="whitespace-nowrap transform rotate-90 mb-2">
                 kundanray.com.np
               </div>
             ))}
           </div>
-          
-          {/* Lanyard clip */}
-          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-accent-tertiary rounded-sm" />
         </div>
+
+        {/* Right Strap */}
+        <div 
+          className="absolute top-0 right-1/4 w-4 bg-gradient-to-b from-accent-primary to-accent-secondary transform origin-top transition-transform duration-200"
+          style={{
+            height: `${160 + lanyardStretch}px`,
+            transform: `translateX(${-position.x * 0.3}px) rotate(${-position.x * 0.05}deg)`
+          }}
+        >
+          {/* Repeating text on right strap */}
+          <div className="absolute inset-0 flex flex-col items-center justify-start text-[6px] font-mono text-primary-foreground/80 leading-tight pt-4">
+            {Array.from({ length: 12 }, (_, i) => (
+              <div key={i} className="whitespace-nowrap transform rotate-90 mb-2">
+                kundanray.com.np
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Connection point */}
+        <div 
+          className="absolute w-6 h-2 bg-accent-tertiary rounded-sm transition-all duration-200"
+          style={{
+            left: `calc(50% - 12px + ${position.x * 0.1}px)`,
+            top: `${150 + lanyardStretch}px`
+          }}
+        />
       </div>
 
       {/* Hanging ID Card */}
       <div
         ref={cardRef}
-        className={`absolute transition-transform duration-300 ${isDragging ? 'scale-105' : 'hover:scale-102'}`}
+        className={`absolute transition-all duration-300 ${isDragging ? 'scale-105' : 'hover:scale-102'}`}
         style={{
           left: `calc(50% - 120px + ${position.x}px)`,
-          top: `calc(140px + ${position.y}px)`,
-          transform: `rotate(${position.x * 0.02}deg)`,
+          top: `calc(160px + ${position.y + lanyardStretch}px)`,
+          transform: `rotate(${(position.x * 0.02) + (lanyardStretch * 0.01)}deg)`,
           cursor: isDragging ? 'grabbing' : 'grab'
         }}
         onMouseDown={handleMouseDown}
       >
         {/* Card Shadow */}
-        <div className="absolute inset-0 bg-card-shadow rounded-lg blur-sm transform translate-y-2 opacity-30" />
+        <div className="absolute inset-0 bg-black/20 rounded-lg blur-sm transform translate-y-3 translate-x-1 opacity-40" />
         
-        {/* Main Card */}
-        <div className="relative w-60 h-80 bg-gradient-card border border-visual-border rounded-lg shadow-neumorphic overflow-hidden">
-          {/* Card Header */}
-          <div className="h-20 bg-accent-primary relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-accent-primary to-accent-secondary opacity-90" />
-            <div className="absolute bottom-2 left-4 text-primary-foreground">
-              <div className="text-xs font-mono opacity-80">EMPLOYEE ID</div>
-              <div className="text-sm font-bold">#DEV-2024</div>
+        {/* Main ID Card - Black and White Design */}
+        <div className="relative w-60 h-80 bg-white border-2 border-black rounded-lg overflow-hidden shadow-2xl">
+          {/* Card Header - Black */}
+          <div className="h-16 bg-black relative flex items-center justify-between px-4">
+            <div className="text-white">
+              <div className="text-xs font-mono font-bold">EMPLOYEE ID</div>
+              <div className="text-sm font-mono">#DEV-2024</div>
+            </div>
+            <div className="w-8 h-8 bg-white rounded border border-black flex items-center justify-center">
+              <div className="w-2 h-2 bg-black rounded-full"></div>
             </div>
           </div>
 
-          {/* Avatar Section */}
-          <div className="relative -mt-8 flex justify-center">
-            <div className="w-16 h-16 bg-visual-bg rounded-full border-4 border-background shadow-neumorphic flex items-center justify-center">
-              <Coffee size={24} className="text-accent-primary" />
+          {/* Photo Section */}
+          <div className="relative bg-white p-4 border-b-2 border-black">
+            <div className="w-24 h-24 mx-auto bg-gray-100 border-2 border-black rounded overflow-hidden">
+              <img 
+                src={profilePhoto} 
+                alt="Kundan Ray" 
+                className="w-full h-full object-cover grayscale"
+              />
             </div>
           </div>
 
-          {/* Card Content */}
-          <div className="p-4 text-center">
-            <h2 className="text-xl font-bold mb-1">Kundan Ray</h2>
-            <p className="text-sm text-accent-primary mb-1">Senior Full-Stack Engineer</p>
-            <p className="text-xs text-muted-foreground mb-4">Kathmandu, Nepal</p>
+          {/* Card Content - White background */}
+          <div className="p-4 text-center bg-white">
+            <h2 className="text-xl font-bold text-black mb-1 font-mono">KUNDAN RAY</h2>
+            <p className="text-sm text-black font-mono mb-1">SENIOR FULL-STACK ENGINEER</p>
+            <p className="text-xs text-gray-600 font-mono mb-3">KATHMANDU, NEPAL</p>
 
             {/* Quick Info */}
-            <div className="space-y-2 mb-4 text-xs">
-              <div className="flex items-center justify-center space-x-1">
-                <Globe size={12} className="text-accent-primary" />
+            <div className="space-y-1 mb-3 text-xs font-mono">
+              <div className="flex items-center justify-center space-x-1 text-black">
+                <span>●</span>
                 <span>kundanray.com.np</span>
               </div>
-              <div className="flex items-center justify-center space-x-1">
-                <Mail size={12} className="text-accent-primary" />
+              <div className="flex items-center justify-center space-x-1 text-black">
+                <span>●</span>
                 <span>hello@kundan.ray</span>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex space-x-2 mb-4">
+            <div className="flex space-x-1 mb-3">
               <Button
                 onClick={() => handleCall('phone')}
-                className="flex-1 h-8 text-xs bg-accent-primary hover:bg-accent-primary/90 text-primary-foreground"
+                className="flex-1 h-7 text-xs bg-black hover:bg-gray-800 text-white font-mono"
               >
-                <Phone size={12} className="mr-1" />
-                Call
+                <Phone size={10} className="mr-1" />
+                CALL
               </Button>
               <Button
                 onClick={() => handleCall('email')}
-                className="flex-1 h-8 text-xs bg-accent-secondary hover:bg-accent-secondary/90 text-primary-foreground"
+                className="flex-1 h-7 text-xs bg-white hover:bg-gray-100 text-black border border-black font-mono"
               >
-                <Mail size={12} className="mr-1" />
-                Email
+                <Mail size={10} className="mr-1" />
+                EMAIL
+              </Button>
+              <Button
+                onClick={() => handleCall('website')}
+                className="flex-1 h-7 text-xs bg-black hover:bg-gray-800 text-white font-mono"
+              >
+                <Globe size={10} className="mr-1" />
+                WEB
               </Button>
             </div>
 
             {/* Social Links */}
-            <div className="flex justify-center space-x-3">
-              <button className="p-2 bg-visual-bg rounded-full hover:bg-card-hover transition-colors">
-                <Github size={14} className="text-accent-primary" />
+            <div className="flex justify-center space-x-2">
+              <button className="w-6 h-6 bg-black hover:bg-gray-800 text-white rounded flex items-center justify-center transition-colors">
+                <Github size={12} />
               </button>
-              <button className="p-2 bg-visual-bg rounded-full hover:bg-card-hover transition-colors">
-                <Linkedin size={14} className="text-accent-primary" />
+              <button className="w-6 h-6 bg-black hover:bg-gray-800 text-white rounded flex items-center justify-center transition-colors">
+                <Linkedin size={12} />
               </button>
-              <button className="p-2 bg-visual-bg rounded-full hover:bg-card-hover transition-colors">
-                <Globe size={14} className="text-accent-primary" />
+              <button className="w-6 h-6 bg-black hover:bg-gray-800 text-white rounded flex items-center justify-center transition-colors">
+                <Globe size={12} />
               </button>
             </div>
           </div>
 
-          {/* Card Footer */}
-          <div className="absolute bottom-0 left-0 right-0 h-8 bg-accent-primary/10 flex items-center justify-center">
-            <div className="text-xs font-mono text-accent-primary">
-              VALID UNTIL: ∞
+          {/* Card Footer - Black */}
+          <div className="absolute bottom-0 left-0 right-0 h-6 bg-black flex items-center justify-center">
+            <div className="text-xs font-mono text-white font-bold">
+              VALID: ∞ | ACCESS: FULL-STACK
             </div>
+          </div>
+
+          {/* Security Pattern */}
+          <div className="absolute top-0 right-0 w-8 h-8 opacity-10">
+            <div className="w-full h-full bg-black transform rotate-45"></div>
           </div>
         </div>
       </div>
 
       {/* Drag Instruction */}
       <div className="absolute top-4 right-4 text-xs text-muted-foreground font-mono opacity-60">
-        🖱️ Drag the ID card around
+        🖱️ Pull the lanyard to move
       </div>
 
       {/* Bottom Navigation Tags */}
