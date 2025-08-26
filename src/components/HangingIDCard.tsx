@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { Phone, Mail, MapPin, Globe, Github, Linkedin } from 'lucide-react';
+import { Phone, Mail, MapPin, Globe, GitBranch, Linkedin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import profilePhoto from '@/assets/profile-photo.jpg';
+// Using profile photo from public folder
+const profilePhoto = '/IMG_2298.webp';
 
 interface HangingIDCardProps {
   activeSection?: string;
@@ -11,17 +12,29 @@ interface HangingIDCardProps {
 const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [lanyardStretch, setLanyardStretch] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+  const animationRef = useRef<number>();
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (!cardRef.current) return;
+    e.preventDefault();
+    
+    // Cancel any ongoing animation
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      setIsAnimating(false);
+    }
 
-    const rect = cardRef.current.getBoundingClientRect();
-    setDragOffset({
-      x: e.clientX - rect.left - position.x,
-      y: e.clientY - rect.top - position.y
+    const container = cardRef.current.parentElement;
+    if (!container) return;
+
+    const containerRect = container.getBoundingClientRect();
+    setDragStart({
+      x: e.clientX - containerRect.left - position.x,
+      y: e.clientY - containerRect.top - position.y
     });
     setIsDragging(true);
   };
@@ -36,36 +49,63 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
       if (!container) return;
 
       const containerRect = container.getBoundingClientRect();
-      const cardRect = cardRef.current.getBoundingClientRect();
+      
+      const newX = e.clientX - containerRect.left - dragStart.x;
+      const newY = e.clientY - containerRect.top - dragStart.y;
 
-      const newX = e.clientX - containerRect.left - dragOffset.x;
-      const newY = e.clientY - containerRect.top - dragOffset.y;
-
-      // Constrain to container bounds with more realistic movement
-      const maxX = containerRect.width - cardRect.width;
-      const maxY = containerRect.height - cardRect.height - 100; // Account for lanyard
-
-      const constrainedX = Math.max(-50, Math.min(maxX + 50, newX));
-      const constrainedY = Math.max(50, Math.min(maxY, newY));
+      // More realistic constraints - lanyard physics
+      const centerX = containerRect.width / 2;
+      const maxSwing = 150; // Maximum horizontal swing
+      const maxDrop = 100;  // Maximum vertical drop
+      
+      const constrainedX = Math.max(-maxSwing, Math.min(maxSwing, newX));
+      const constrainedY = Math.max(-30, Math.min(maxDrop, newY));
 
       setPosition({
         x: constrainedX,
         y: constrainedY
       });
 
-      // Calculate lanyard stretch based on distance from center
-      const centerX = containerRect.width / 2;
-      const distanceFromCenter = Math.abs(constrainedX + cardRect.width / 2 - centerX);
-      const stretch = Math.min(distanceFromCenter * 0.3, 30);
+      // Calculate lanyard stretch based on distance and position
+      const horizontalDistance = Math.abs(constrainedX);
+      const verticalDistance = Math.max(0, constrainedY);
+      const totalDistance = Math.sqrt(horizontalDistance * horizontalDistance + verticalDistance * verticalDistance);
+      const stretch = Math.min(totalDistance * 0.2, 40);
       setLanyardStretch(stretch);
     };
 
     const handlePointerUp = () => {
       setIsDragging(false);
-      // Gentle bounce back effect
-      setTimeout(() => {
-        setLanyardStretch(0);
-      }, 200);
+      
+      // Smooth return animation with physics
+      setIsAnimating(true);
+      const startPos = { ...position };
+      const startStretch = lanyardStretch;
+      const startTime = Date.now();
+      const duration = 800; // Animation duration
+      
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Easing function - elastic out
+        const easeOut = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress) * Math.cos((progress * 10 - 0.75) * (2 * Math.PI) / 3);
+        
+        const newX = startPos.x * (1 - easeOut);
+        const newY = startPos.y * (1 - easeOut);
+        const newStretch = startStretch * (1 - easeOut);
+        
+        setPosition({ x: newX, y: newY });
+        setLanyardStretch(newStretch);
+        
+        if (progress < 1) {
+          animationRef.current = requestAnimationFrame(animate);
+        } else {
+          setIsAnimating(false);
+        }
+      };
+      
+      animationRef.current = requestAnimationFrame(animate);
     };
 
     window.addEventListener('pointermove', handlePointerMove);
@@ -79,7 +119,16 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
     };
-  }, [isDragging, dragOffset]);
+  }, [isDragging, dragStart, position, lanyardStretch]);
+
+  // Cleanup animation on unmount
+  useEffect(() => {
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
 
 
   const sections = [
@@ -101,27 +150,29 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
   };
 
   return (
-    <div className="h-full bg-visual-bg relative overflow-hidden">
+    <div className="h-full relative overflow-hidden">
       {/* Background Elements */}
-      <div className="absolute inset-0 bg-gradient-primary opacity-20" />
+      <div className="absolute inset-0 bg-gradient-primary opacity-10" />
       <div className="absolute top-20 left-10 w-32 h-32 bg-accent-primary/5 rounded-full blur-xl animate-float" />
       <div className="absolute bottom-20 right-10 w-24 h-24 bg-accent-secondary/5 rounded-full blur-xl animate-float" style={{ animationDelay: '1s' }} />
 
       {/* Neck Straps - Two straps from top corners */}
-      <div className="absolute top-0 left-0 right-0 h-60">
+      <div className="absolute top-0 left-0 right-0">
         {/* Left Strap */}
         <div 
-          className="absolute top-0 left-1/4 w-4 bg-gradient-to-b from-accent-primary to-accent-secondary transform origin-top transition-transform duration-200"
+          className={`absolute top-0 w-6 bg-black transform origin-top ${!isDragging && !isAnimating ? 'transition-all duration-300 ease-out' : ''}`}
           style={{
-            height: `${160 + lanyardStretch}px`,
-            transform: `translateX(${position.x * 0.3}px) rotate(${position.x * 0.05}deg)`
+            left: `calc(50% - 90px + ${position.x * 0.7}px)`,
+            height: `${170 + position.y + lanyardStretch}px`,
+            transform: `rotate(${position.x * 0.05}deg)`,
+            transformOrigin: 'top center'
           }}
         >
-          {/* Repeating text on left strap */}
-          <div className="absolute inset-0 flex flex-col items-center justify-start text-[6px] font-mono text-primary-foreground/80 leading-tight pt-4">
-            {Array.from({ length: 12 }, (_, i) => (
-              <div key={i} className="whitespace-nowrap transform rotate-90 mb-2">
-                kundanray.com.np
+          {/* Repeating name pattern on left strap */}
+          <div className="absolute inset-0 flex flex-col items-center justify-start text-[8px] font-mono text-white leading-relaxed pt-8 overflow-hidden">
+            {Array.from({ length: Math.min(3, Math.ceil((170 + position.y + lanyardStretch) / 60)) }, (_, i) => (
+              <div key={i} className="whitespace-nowrap transform rotate-90 mb-12">
+                KUNDAN RAY
               </div>
             ))}
           </div>
@@ -129,28 +180,30 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
 
         {/* Right Strap */}
         <div 
-          className="absolute top-0 right-1/4 w-4 bg-gradient-to-b from-accent-primary to-accent-secondary transform origin-top transition-transform duration-200"
+          className={`absolute top-0 w-6 bg-black transform origin-top ${!isDragging && !isAnimating ? 'transition-all duration-300 ease-out' : ''}`}
           style={{
-            height: `${160 + lanyardStretch}px`,
-            transform: `translateX(${-position.x * 0.3}px) rotate(${-position.x * 0.05}deg)`
+            left: `calc(50% + 54px + ${position.x * 0.7}px)`,
+            height: `${170 + position.y + lanyardStretch}px`,
+            transform: `rotate(${-position.x * 0.05}deg)`,
+            transformOrigin: 'top center'
           }}
         >
-          {/* Repeating text on right strap */}
-          <div className="absolute inset-0 flex flex-col items-center justify-start text-[6px] font-mono text-primary-foreground/80 leading-tight pt-4">
-            {Array.from({ length: 12 }, (_, i) => (
-              <div key={i} className="whitespace-nowrap transform rotate-90 mb-2">
-                kundanray.com.np
+          {/* Repeating name pattern on right strap */}
+          <div className="absolute inset-0 flex flex-col items-center justify-start text-[8px] font-mono text-white leading-relaxed pt-8 overflow-hidden">
+            {Array.from({ length: Math.min(3, Math.ceil((170 + position.y + lanyardStretch) / 60)) }, (_, i) => (
+              <div key={i} className="whitespace-nowrap transform rotate-90 mb-12">
+                KUNDAN RAY
               </div>
             ))}
           </div>
         </div>
 
-        {/* Connection point */}
+        {/* Connection point at top of card */}
         <div 
-          className="absolute w-6 h-2 bg-accent-tertiary rounded-sm transition-all duration-200"
+          className={`absolute w-12 h-4 bg-black rounded-sm shadow-sm ${!isDragging && !isAnimating ? 'transition-all duration-300 ease-out' : ''}`}
           style={{
-            left: `calc(50% - 12px + ${position.x * 0.1}px)`,
-            top: `${150 + lanyardStretch}px`
+            left: `calc(50% - 24px + ${position.x}px)`,
+            top: `${165 + position.y + lanyardStretch}px`
           }}
         />
       </div>
@@ -158,10 +211,10 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
       {/* Hanging ID Card */}
       <div
         ref={cardRef}
-        className={`absolute transition-all duration-300 ${isDragging ? 'scale-105' : 'hover:scale-102'}`}
+        className={`absolute ${!isDragging && !isAnimating ? 'transition-all duration-300' : ''} ${isDragging ? 'scale-105' : 'hover:scale-102'}`}
         style={{
-          left: `calc(50% - 120px + ${position.x}px)`,
-          top: `calc(160px + ${position.y + lanyardStretch}px)`,
+          left: `calc(50% - 160px + ${position.x}px)`,
+          top: `calc(170px + ${position.y + lanyardStretch}px)`,
           transform: `rotate(${(position.x * 0.02) + (lanyardStretch * 0.01)}deg)`,
           cursor: isDragging ? 'grabbing' : 'grab'
         }}
@@ -171,12 +224,12 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
         <div className="absolute inset-0 bg-black/20 rounded-lg blur-sm transform translate-y-3 translate-x-1 opacity-40" />
         
         {/* Main ID Card - Black and White Design */}
-        <div className="relative w-60 h-80 bg-white border-2 border-black rounded-lg overflow-hidden shadow-2xl">
+        <div className="relative w-80 h-[26rem] bg-white border-2 border-black rounded-lg overflow-hidden shadow-2xl">
           {/* Card Header - Black */}
           <div className="h-16 bg-black relative flex items-center justify-between px-4">
             <div className="text-white">
-              <div className="text-xs font-mono font-bold">EMPLOYEE ID</div>
-              <div className="text-sm font-mono">#DEV-2024</div>
+              <div className="text-xs font-mono font-bold">Human ID</div>
+              <div className="text-sm font-mono">#DEV-1997</div>
             </div>
             <div className="w-8 h-8 bg-white rounded border border-black flex items-center justify-center">
               <div className="w-2 h-2 bg-black rounded-full"></div>
@@ -184,21 +237,22 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
           </div>
 
           {/* Photo Section */}
-          <div className="relative bg-white p-4 border-b-2 border-black">
-            <div className="w-24 h-24 mx-auto bg-gray-100 border-2 border-black rounded overflow-hidden">
+          <div className="relative bg-white p-6 border-b-2 border-black">
+            <div className="w-32 h-32 mx-auto bg-gray-100 border-2 border-black rounded-full overflow-hidden">
               <img 
                 src={profilePhoto} 
                 alt="Kundan Ray" 
-                className="w-full h-full object-cover grayscale"
+                className="w-full h-full object-cover"
               />
             </div>
           </div>
 
           {/* Card Content - White background */}
-          <div className="p-4 text-center bg-white">
-            <h2 className="text-xl font-bold text-black mb-1 font-mono">KUNDAN RAY</h2>
-            <p className="text-sm text-black font-mono mb-1">SENIOR FULL-STACK ENGINEER</p>
-            <p className="text-xs text-gray-600 font-mono mb-3">KATHMANDU, NEPAL</p>
+          <div className="p-6 text-center bg-white">
+            <h2 className="text-2xl font-bold text-black mb-2 font-mono">KUNDAN RAY</h2>
+            <p className="text-base text-black font-mono mb-1">SENIOR FULL-STACK ENGINEER</p>
+            <p className="text-sm text-gray-600 font-mono mb-2">KATHMANDU, NEPAL</p>
+            <p className="text-xs text-gray-500 font-mono mb-4">→ MELBOURNE, VICTORIA, AUSTRALIA</p>
 
             {/* Quick Info */}
             <div className="space-y-1 mb-3 text-xs font-mono">
@@ -240,7 +294,7 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
             {/* Social Links */}
             <div className="flex justify-center space-x-2">
               <button className="w-6 h-6 bg-black hover:bg-gray-800 text-white rounded flex items-center justify-center transition-colors">
-                <Github size={12} />
+                <GitBranch size={12} />
               </button>
               <button className="w-6 h-6 bg-black hover:bg-gray-800 text-white rounded flex items-center justify-center transition-colors">
                 <Linkedin size={12} />
@@ -254,13 +308,26 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
           {/* Card Footer - Black */}
           <div className="absolute bottom-0 left-0 right-0 h-6 bg-black flex items-center justify-center">
             <div className="text-xs font-mono text-white font-bold">
-              VALID: ∞ | ACCESS: FULL-STACK
+              VALID: Till Death | ACCESS: GOD-LEVEL
             </div>
           </div>
 
-          {/* Security Pattern */}
+          {/* Security Pattern & Watermarks */}
           <div className="absolute top-0 right-0 w-8 h-8 opacity-10">
             <div className="w-full h-full bg-black transform rotate-45"></div>
+          </div>
+          
+          {/* Watermark Text */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute top-20 left-4 transform -rotate-45 opacity-5 text-xs font-mono text-black">
+              KUNDAN RAY
+            </div>
+            <div className="absolute bottom-32 right-4 transform rotate-45 opacity-5 text-xs font-mono text-black">
+              DEV-2024
+            </div>
+            <div className="absolute bottom-20 left-6 transform -rotate-12 opacity-5 text-xs font-mono text-black">
+              ENGINEER
+            </div>
           </div>
         </div>
       </div>

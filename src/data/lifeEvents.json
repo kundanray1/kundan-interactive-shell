@@ -1,0 +1,397 @@
+{
+  "personalInfo": {
+    "name": "Kundan Ray",
+    "title": "Senior Full-Stack Engineer | Entrepreneur | Product Builder",
+    "location": "Kathmandu, Nepal (until Aug 2025) → Melbourne, VIC (from Sep 2025)",
+    "email": "raykundan57@gmail.com",
+    "website": "https://www.kundanray.com.np",
+    "linkedin": "https://linkedin.com/in/er-kundan-ray-b432a412a",
+    "github": "https://github.com/kundanray1"
+  },
+  "onlinePresence": {
+    "contentThemes": [
+      "Engineering + product strategy",
+      "AI/ML integration in real apps",
+      "Public health/aged-care insights",
+      "Career reflections & philosophy",
+      "Hands-on React/TypeScript patterns"
+    ],
+    "platforms": [
+      {"name": "LinkedIn", "role": "Thought leadership, hiring signal, product logs"},
+      {"name": "GitHub", "role": "Code samples, POCs, infra scripts"},
+      {"name": "Personal Website", "role": "Portfolio, long-form posts, contact"}
+    ]
+  },
+ "personalTraits": [
+    {
+      "trait": "Egoless",
+      "description": "Leads with humility; focuses on learning and outcomes over credit."
+    },
+    {
+      "trait": "Positive Energy",
+      "description": "People who don’t need anything from me tend to enjoy my vibe; I keep spaces calm and constructive."
+    },
+    {
+      "trait": "Neutral & Logical",
+      "description": "When caught between conflicts, I don’t judge. I listen to both sides. If I have experience, I share; if not, I reason logically."
+    },
+    {
+      "trait": "Empathetic with Kids",
+      "description": "I love children deeply. My nephew calls me father on Father’s Day — I see time as milestones in shaping how kids grow."
+    },
+    {
+      "trait": "First-Principles Thinker",
+      "description": "Gravitates to physics/maths reasoning; explains complex systems simply."
+    }
+  ],
+  "lifeEvents": [
+    {
+      "id": "childhood-pataili",
+      "type": "personal",
+      "date": "1990s",
+      "title": "Childhood in Pataili, Mahottari",
+      "description": "Simple village life with enough to feed on, public school till Grade 2.",
+      "impact": "Grounded values, resilience and adaptability.",
+      "tags": ["origin", "village", "family"]
+    },
+    {
+      "id": "move-kathmandu",
+      "type": "personal",
+      "date": "early-2000s",
+      "title": "Moved to Kathmandu",
+      "description": "After Grade 3, shifted to Kathmandu; changed schools based on what was feasible for parents.",
+      "impact": "Learned to adapt quickly to new environments.",
+      "tags": ["family", "education", "adaptability"]
+    },
+    {
+      "id": "grade-skip",
+      "type": "education",
+      "date": "2000s",
+      "title": "Skipped Grades 5 and 7",
+      "description": "Parents accelerated my path when they felt I was taking it easy.",
+      "impact": "Built discipline and a growth mindset early.",
+      "tags": ["education", "discipline"]
+    },
+    {
+      "id": "stem-love",
+      "type": "education",
+      "date": "2000s",
+      "title": "Love for Physics & Maths",
+      "description": "Found meaning in how maths and physics explain the world.",
+      "impact": "Seeded a lifetime STEM curiosity.",
+      "tags": ["STEM", "physics", "maths"]
+    },
+    {
+      "id": "scholarship-9-10",
+      "type": "education",
+      "date": "late-2000s",
+      "title": "Scholarship in Grades 9–10",
+      "description": "Merit-based scholarship; performed well academically.",
+      "impact": "Confidence boost and academic validation.",
+      "tags": ["scholarship", "achievement"]
+    },
+    {
+      "id": "ccrc-plus2",
+      "type": "education",
+      "date": "2011–2013",
+      "title": "Science at CCRC (Balkumari)",
+      "description": "Did well in 11–12; happy and fulfilling student life.",
+      "impact": "Solid science foundation; teamwork and discipline.",
+      "tags": ["science", "college", "ccrc"]
+    },
+    {
+      "id": "bangalore-mech",
+      "type": "education",
+      "date": "2013",
+      "title": "Mechanical Engineering in Bangalore (1 month)",
+      "description": "Tried ME but returned after a month—misfit + costs.",
+      "impact": "Clarity on alignment between passion and path.",
+      "tags": ["pivot", "self-awareness"]
+    },
+    {
+      "id": "ioe-pass",
+      "type": "education",
+      "date": "2013",
+      "title": "IOE Entrance (Nepal) → Computer Engineering",
+      "description": "Cleared IOE and joined Computer Engineering.",
+      "impact": "Defined software path with long-term upside.",
+      "tags": ["engineering", "software"]
+    },
+    {
+      "id": "teach-while-study",
+      "type": "career",
+      "date": "2013–2017",
+      "title": "Teaching 11–12 CS at Xavier’s International & CCRC",
+      "description": "Explained beyond syllabus (e.g., CPU clocks) to make CS tangible; supported living while studying.",
+      "impact": "Communication + systems thinking; early leadership.",
+      "tags": ["teaching", "mentoring", "communication"]
+    },
+    {
+      "id": "be-computer",
+      "type": "achievement",
+      "date": "2021",
+      "title": "Computer Engineering Graduation + Engineering License",
+      "description": "Completed in 4 years with no backlogs; obtained license.",
+      "impact": "Credibility to pair with practical skills.",
+      "tags": ["graduation", "license"]
+    },
+    {
+      "id": "love-journey",
+      "type": "personal",
+      "date": "2012–2021",
+      "title": "Nine-Year Relationship",
+      "description": "Dated my now-wife for 9 years—grew together through teens and 20s.",
+      "impact": "Learned empathy, patience, shared growth.",
+      "tags": ["love", "growth"]
+    },
+    {
+      "id": "marriage",
+      "type": "personal",
+      "date": "2022",
+      "title": "Marriage",
+      "description": "Married; 3 years in, still an adventure together.",
+      "impact": "Stability and shared responsibility.",
+      "tags": ["family", "commitment"]
+    },
+    {
+      "id": "semicolontec",
+      "type": "career",
+      "date": "2019–2020",
+      "title": "React Native Dev @ SemiColon Tec",
+      "description": "Ride-sharing UI; improved retention.",
+      "impact": "Mobile UI/UX depth.",
+      "tags": ["career", "mobile"]
+    },
+    {
+      "id": "core-dreams",
+      "type": "career",
+      "date": "2020–2021",
+      "title": "React Native Dev @ Core Dreams",
+      "description": "Cab reservation UX; engagement and booking time gains.",
+      "impact": "Product intuition for flows.",
+      "tags": ["career", "product"]
+    },
+    {
+      "id": "treeleaf",
+      "type": "career",
+      "date": "2021",
+      "title": "Software Engineer @ Treeleaf.AI",
+      "description": "NFC POS integration; UX redesign.",
+      "impact": "Edge devices + human-centered UX.",
+      "tags": ["ai", "pos", "ux"]
+    },
+    {
+      "id": "outcode",
+      "type": "career",
+      "date": "2022–2025",
+      "title": "Software Engineer @ Outcode",
+      "description": "React/React Native delivery; Three.js AutoCAD-like system that helped win major business.",
+      "impact": "Full-stack + 3D, performance, delivery rigor.",
+      "tags": ["full-stack", "threejs"]
+    },
+    {
+      "id": "srvd",
+      "type": "project",
+      "date": "2023–2024",
+      "title": "Srvd – Legal Ops Platform",
+      "description": "Role-based workflows, mobile updates, reporting.",
+      "impact": "Lawtech operations literacy.",
+      "tags": ["lawtech", "saas"]
+    },
+    {
+      "id": "metricwire",
+      "type": "project",
+      "date": "2024–present",
+      "title": "MetricWire – Wearable Data Portal",
+      "description": "Garmin → TimescaleDB pipeline; real-time research dashboards.",
+      "impact": "Health data engineering & viz.",
+      "tags": ["wearables", "healthtech"]
+    },
+    {
+      "id": "marchup",
+      "type": "project",
+      "date": "2024–present",
+      "title": "MarchUp – ADHD Student App",
+      "description": "Focus features + GRE flashcards; simple game-like UX.",
+      "impact": "Social impact + mobile craft.",
+      "tags": ["education", "adhd"]
+    },
+    {
+      "id": "recon",
+      "type": "project",
+      "date": "2022–2025",
+      "title": "Recon – Infra Risk Mapping",
+      "description": "TypeScript + ESRI ArcGIS; bridge risk assessments.",
+      "impact": "Geospatial stack experience.",
+      "tags": ["gis", "infrastructure"]
+    },
+    {
+      "id": "provocative",
+      "type": "project",
+      "date": "2025-01–2025-04",
+      "title": "Provocative – Lean Cloud Platform",
+      "description": "CloudStack-based AWS-like platform; RBAC, multi-tenant.",
+      "impact": "Infra vision + investor-grade MVP.",
+      "tags": ["cloud", "entrepreneurship"]
+    },
+    {
+      "id": "gurzu-consult",
+      "type": "career",
+      "date": "2025-02–present",
+      "title": "Senior Software Engineer (Consultant) @ Gurzu",
+      "description": "Quality oversight, GenAI adoption, UX uplift, onboarding docs.",
+      "impact": "Org-level impact; governance.",
+      "tags": ["consulting", "genai"]
+    },
+    {
+      "id": "binyan-senior",
+      "type": "career",
+      "date": "2025-04–present",
+      "title": "Senior Full-Stack Engineer @ Binyan Studios",
+      "description": "AI toolkit, centralized queues, 3D CMS (Three.js), on-device vector search, Zero-Trust, docs & onboarding.",
+      "impact": "Scaled AI/3D across creative workflows.",
+      "tags": ["ai", "3d", "platform"]
+    },
+    {
+      "id": "volunteering",
+      "type": "personal",
+      "date": "2024–present",
+      "title": "Volunteering: Blood for Nepal & Bagmati Cleanup",
+      "description": "Organised blood donations; river cleanups.",
+      "impact": "Community health and environmental stewardship.",
+      "tags": ["volunteering", "community"]
+    },
+    {
+      "id": "music-joy",
+      "type": "personal",
+      "date": "ongoing",
+      "title": "Music as Peace",
+      "description": "Enjoy singing casually, often with my wife joining in. Music feels like a peaceful escape and a dream to formally learn basics someday.",
+      "impact": "Balances intense engineering life with soulful calm.",
+      "tags": ["music", "family", "hobby"]
+    },
+    {
+      "id": "aviation-dream",
+      "type": "personal",
+      "date": "ongoing",
+      "title": "Dream to Fly a Plane",
+      "description": "Strong interest in aviation and flight. Joke about knowing how shuttles land, but real aspiration is to pilot someday.",
+      "impact": "Represents curiosity and pursuit of freedom.",
+      "tags": ["aviation", "dream", "curiosity"]
+    },
+    {
+      "id": "family-nephew",
+      "type": "personal",
+      "date": "2020s",
+      "title": "Bond with Nephew",
+      "description": "My nephew greets me as father on Father’s Day. I see him like my son and value being part of his growth journey.",
+      "impact": "Strengthens view of time as milestones in shaping kids’ lives.",
+      "tags": ["family", "kids", "love"]
+    }
+
+  ],
+  "skills": {
+    "frontend": ["React", "React Native", "Next.js", "TypeScript", "Tailwind CSS", "Three.js", "ESRI ArcGIS", "Storybook"],
+    "backend": ["Node.js", "Express", "GraphQL", "Python", "FastAPI", "Django (working knowledge)"],
+    "databases": ["PostgreSQL", "TimescaleDB", "MySQL", "MongoDB", "Redis"],
+    "cloud_devops": ["AWS", "Docker", "CI/CD (GitHub Actions)", "Cloudflare Zero-Trust", "Apache CloudStack"],
+    "data_ai": ["On-device vector search", "Model evaluation & local inference", "Prompt/guardrail governance"],
+    "tools": ["RabbitMQ", "Stripe", "Socket.io", "Firebase", "OAuth", "Apple IAP", "Protocol Buffers"],
+    "pm_collab": ["Jira", "ClickUp", "Confluence", "Slack", "Basecamp"]
+  },
+  "projects": [
+    {
+      "name": "Provocative",
+      "description": "Lean AWS-like cloud platform (CloudStack, RBAC, multi-tenant).",
+      "tech": ["React", "Node.js", "CloudStack", "AWS", "Docker"],
+      "status": "completed",
+      "role": "Architect & Lead"
+    },
+    {
+      "name": "MetricWire Wearable Portal",
+      "description": "Garmin ingestion → TimescaleDB; research dashboards.",
+      "tech": ["Next.js", "TypeScript", "TimescaleDB", "Garmin Health API"],
+      "status": "active",
+      "role": "Lead Engineer"
+    },
+    {
+      "name": "MarchUp",
+      "description": "ADHD student support app with GRE flashcards and focus features.",
+      "tech": ["React Native", "TypeScript", "Firebase", "Push Notifications"],
+      "status": "active",
+      "role": "Founder/Builder"
+    },
+    {
+      "name": "Srvd",
+      "description": "Legal case management (role-based workflows, reporting).",
+      "tech": ["React", "Node.js", "Socket.io", "PostgreSQL"],
+      "status": "completed",
+      "role": "Full-Stack Lead"
+    },
+    {
+      "name": "Recon",
+      "description": "Bridge/infrastructure risk mapping with ESRI hex layers.",
+      "tech": ["TypeScript", "ArcGIS", "EC2", "Self-hosted runners"],
+      "status": "completed",
+      "role": "Developer"
+    },
+    {
+      "name": "3D CMS",
+      "description": "Database-driven scenes/styles/assets rendered in real time.",
+      "tech": ["Three.js", "React", "Node.js"],
+      "status": "active",
+      "role": "Architect"
+    }
+  ],
+  "achievements": [
+    "Graduated Computer Engineering with no backlogs; obtained engineering license",
+    "Shipped 10+ production systems across lawtech, health, cloud and mapping",
+    "Won/secured business via innovative Three.js AutoCAD-like POC",
+    "Cut new-hire onboarding time by ~25% through living docs and API guides",
+    "Invited hackathon judge; mentoring and community advocacy",
+    "Volunteering: Blood for Nepal, Bagmati River cleanup"
+  ],
+  "interests": [
+    "Music — peaceful escape, sometimes singing with my wife",
+    "Learning music basics someday",
+    "Aviation — fascination with flying, dream to pilot a plane",
+    "Physics (relativity, space shuttles, human anatomy)",
+    "Community service and volunteering",
+    "Neutral advisor role — giving logical or experience-based takeaways",
+    "Kids & family growth — valuing time as milestones",
+    "Adventure films (e.g., Jumanji)"
+  ],
+  "linkedinActivity": {
+    "style": "Reflective, builder-centric, visual demos, occasional spicy takes with data",
+    "commonTopics": [
+      "React/TypeScript patterns",
+      "GenAI integrations and guardrails",
+      "Product thinking and delivery trade-offs",
+      "Career narratives and lessons",
+      "Policy/health insights from capstone work"
+    ],
+    "goals": [
+      "Attract global roles & consulting",
+      "Investor/partner interest for MVPs",
+      "Mentor juniors and share learning paths"
+    ]
+  },
+  "timeline": [
+    {"year": "1990s", "summary": "Pataili village → public school; move to Kathmandu"},
+    {"year": "2011–2013", "summary": "CCRC Science (11–12); strong STEM base"},
+    {"year": "2013", "summary": "Bangalore ME attempt → return; IOE pass → Computer Eng"},
+    {"year": "2013–2017", "summary": "Teach CS (Xavier’s, CCRC) while studying"},
+    {"year": "2021", "summary": "Graduate; engineering license"},
+    {"year": "2019–2024", "summary": "Mobile/web roles; Srvd, Recon, MetricWire, MarchUp"},
+    {"year": "2025", "summary": "Provocative MVP; Gurzu consulting; Binyan senior role"},
+    {"year": "2022–2025", "summary": "Married; 3 years together (after 9 years dating)"},
+    {"year": "2024–present", "summary": "Volunteering: Blood for Nepal, Bagmati cleanup"}
+    ],
+  "meta": {
+    "lastUpdated": "2025-08-26",
+    "notes": [
+      "Dates for some early events are approximate and narrative-accurate.",
+      "Safe to expose on portfolio; omit personal phone/email if publishing public JSON."
+    ]
+  }
+}

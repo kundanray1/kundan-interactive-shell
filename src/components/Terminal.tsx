@@ -1,6 +1,57 @@
 import { useState, useRef, useEffect } from 'react';
-import { Command, Terminal as TerminalIcon, Copy, Minimize2, Maximize2, X } from 'lucide-react';
+// Removed unused imports for terminal buttons
 import { getAIResponse } from '@/lib/openai';
+import lifeEventsData from '@/data/lifeEvents.json';
+
+// Funny loader component
+const FunnyLoader = () => {
+  const [messageIndex, setMessageIndex] = useState(0);
+  
+  const funnyMessages = [
+    "🤖 Booting up AI neurons...",
+    "🧠 Consulting the digital brain cells...",
+    "⚡ Charging up the knowledge capacitors...", 
+    "🔍 Searching through Kundan's memories...",
+    "🚀 Launching artificial intelligence rockets...",
+    "🎯 Targeting the perfect response...",
+    "🎪 Teaching monkeys to code... wait, wrong process!",
+    "🔮 Consulting the crystal ball of knowledge...",
+    "🎭 AI is having an existential crisis... standby!",
+    "🍕 Ordering pizza for the algorithms... they're hungry!",
+    "🦄 Catching unicorns in the data streams...",
+    "🎮 Playing chess with the neural networks...",
+    "🎨 AI is finger-painting with data...",
+    "🎪 Running away to join the machine learning circus...",
+    "🚂 All aboard the AI express train! Choo choo!",
+    "🎵 AI is composing a symphony of responses...",
+    "🧙‍♂️ Casting algorithmic spells...",
+    "🎲 Rolling dice with probability distributions...",
+    "🦋 Metamorphosis of data into wisdom...",
+    "🎪 The AI circus is in town! 🤡"
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMessageIndex(prev => (prev + 1) % funnyMessages.length);
+    }, 1500);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="flex items-center space-x-3 text-accent-primary">
+      <div className="flex space-x-1">
+        <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+        <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+        <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+      </div>
+      <div className="relative">
+        <span className="animate-pulse">{funnyMessages[messageIndex]}</span>
+        <span className="absolute -top-1 -right-1 text-xs animate-spin">⚡</span>
+      </div>
+    </div>
+  );
+};
 
 interface TerminalProps {
   onSectionChange?: (section: string) => void;
@@ -14,13 +65,18 @@ interface CommandHistory {
 
 const Terminal = ({ onSectionChange }: TerminalProps) => {
   const [input, setInput] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
   const [history, setHistory] = useState<CommandHistory[]>([
     {
       command: 'welcome',
       output: [
-        'Welcome to Kundan Ray\'s interactive resume!',
-        'Type "kundan --help" or "help" to see available commands.',
-        'Or click a section tag above ↗'
+        '🎯 Welcome to Kundan Ray\'s AI-Powered Interactive Resume!',
+        '',
+        '💬 Talk naturally: "Tell me about your startup experience"',
+        '⌨️  Use commands: "life-events --startup" or "help"',
+        '🔍 Ask anything: "What technologies do you work with?"',
+        '',
+        'This terminal supports both natural conversation and commands!'
       ],
       type: 'info'
     }
@@ -30,56 +86,41 @@ const Terminal = ({ onSectionChange }: TerminalProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
 
+  // Combine static resume data with dynamic life events
   const resumeData = {
+    ...lifeEventsData,
+    // Keep some legacy data for compatibility
     about: {
-      summary: "Senior Full-Stack Engineer—loves playful UI and robust terminal tooling.",
-      details: "Passionate about creating delightful user experiences while building scalable backend systems. I enjoy bridging the gap between design and development, with a particular love for terminal interfaces and developer tooling."
-    },
-    skills: [
-      { name: "TypeScript", level: "expert", tags: ["frontend", "backend"] },
-      { name: "React/Next.js", level: "expert", tags: ["frontend", "ui"] },
-      { name: "Node.js/NestJS", level: "advanced", tags: ["backend", "api"] },
-      { name: "Tailwind/Motion", level: "advanced", tags: ["frontend", "ux"] },
-      { name: "Postgres/Prisma", level: "advanced", tags: ["db"] },
-      { name: "Docker/AWS", level: "advanced", tags: ["devops"] }
-    ],
-    projects: [
-      {
-        name: "Provocative",
-        summary: "Lean AWS-like platform for data-center owners.",
-        featured: true,
-        tags: ["react", "node", "infra"],
-        tech: "React, Node.js, Docker, AWS"
-      },
-      {
-        name: "LintAI",
-        summary: "AI-powered code scanning with graph visualisation.",
-        featured: true,
-        tags: ["ai", "visualisation", "node"],
-        tech: "Node.js, AI/ML, D3.js"
-      }
-    ],
-    experience: [
-      {
-        role: "Senior Full-Stack Engineer",
-        company: "Freelance",
-        period: "2022–Present",
-        bullets: [
-          "End-to-end product ownership (ideation → infra).",
-          "Shipped UI systems with motion & accessibility.",
-          "Led multi-tenant architecture deployments."
-        ]
-      }
-    ],
-    contact: {
-      email: "hello@kundan.ray",
-      location: "Kathmandu, Nepal",
-      availability: "Open to remote roles"
+      summary: "Senior Full-Stack Engineer from Nepal—bridging technology and creativity in the Himalayas.",
+      details: "Passionate about creating delightful user experiences while building scalable systems. Co-founded a fintech startup and love integrating AI into practical applications."
     }
   };
 
+  // Helper function to detect if input is a natural language query
+  const isNaturalLanguage = (input: string): boolean => {
+    const naturalPatterns = [
+      /^(tell me|what|how|when|where|why|who|can you|do you|are you|have you)/i,
+      /\?$/,
+      /^(i want to know|i'm curious|explain|describe)/i,
+      /^(show me|give me|find)/i
+    ];
+    return naturalPatterns.some(pattern => pattern.test(input.trim()));
+  };
+
   const parseCommand = async (cmd: string): Promise<CommandHistory> => {
-    const parts = cmd.trim().toLowerCase().split(' ');
+    const trimmed = cmd.trim();
+    
+    // If it looks like natural language, send to AI immediately
+    if (isNaturalLanguage(trimmed)) {
+      const ai = await getAIResponse(trimmed, resumeData);
+      return {
+        command: cmd,
+        output: [ai],
+        type: 'info'
+      };
+    }
+
+    const parts = trimmed.toLowerCase().split(' ');
     const command = parts[0];
     const args = parts.slice(1);
 
@@ -101,13 +142,26 @@ const Terminal = ({ onSectionChange }: TerminalProps) => {
               '  experience       Show work experience',
               '  contact          Show contact information',
               '  socials          List social links',
+              '  life-events      Show major life events timeline',
+              '  life-events --<tag>  Filter events by tag (e.g. --career, --skill)',
+              '  achievements     List major achievements',
+              '  interests        Show personal interests',
+              '  timeline         Show complete chronological timeline',
+              '  search <term>    Search through life events and data',
               '  clear            Clear terminal',
               '  theme <mode>     Switch theme (light/dark)',
               '',
-              'Examples:',
+              '💬 Natural Language:',
+              '  Just ask naturally! Examples:',
+              '  "Tell me about your startup experience"',
+              '  "What technologies do you use?"',
+              '  "When did you start programming?"',
+              '',
+              'Command Examples:',
               '  open about',
               '  skills expert',
-              '  open projects'
+              '  life-events --startup',
+              '  achievements'
             ],
             type: 'info'
           };
@@ -158,17 +212,7 @@ const Terminal = ({ onSectionChange }: TerminalProps) => {
             };
 
           case 'skills':
-            return {
-              command: cmd,
-              output: [
-                '🛠️ Technical Skills',
-                '',
-                ...resumeData.skills.map(skill => 
-                  `${skill.name.padEnd(20)} ${skill.level.padEnd(12)} [${skill.tags.join(', ')}]`
-                )
-              ],
-              type: 'success'
-            };
+            return parseCommand('skills');
 
           case 'projects':
             return {
@@ -177,10 +221,10 @@ const Terminal = ({ onSectionChange }: TerminalProps) => {
                 '🧩 Featured Projects',
                 '',
                 ...resumeData.projects.map(project => [
-                  `${project.name}${project.featured ? ' ⭐' : ''}`,
-                  `  ${project.summary}`,
-                  `  Tech: ${project.tech}`,
-                  `  Tags: ${project.tags.join(', ')}`,
+                  `${project.name} ${project.status === 'active' ? '🚀' : '✅'}`,
+                  `  ${project.description}`,
+                  `  Tech: ${project.tech.join(', ')}`,
+                  `  Status: ${project.status}`,
                   ''
                 ]).flat()
               ],
@@ -188,16 +232,16 @@ const Terminal = ({ onSectionChange }: TerminalProps) => {
             };
 
           case 'experience':
+            const careerEvents = resumeData.lifeEvents.filter(event => event.type === 'career');
             return {
               command: cmd,
               output: [
-                '🏢 Work Experience',
+                '🏢 Professional Experience',
                 '',
-                ...resumeData.experience.map(exp => [
-                  `${exp.role} @ ${exp.company}`,
-                  `${exp.period}`,
-                  '',
-                  ...exp.bullets.map(bullet => `• ${bullet}`),
+                ...careerEvents.reverse().map(event => [
+                  `${new Date(event.date).getFullYear()} - ${event.title}`,
+                  `  ${event.description}`,
+                  `  Impact: ${event.impact}`,
                   ''
                 ]).flat()
               ],
@@ -210,9 +254,12 @@ const Terminal = ({ onSectionChange }: TerminalProps) => {
               output: [
                 '✉️ Contact Information',
                 '',
-                `Email: ${resumeData.contact.email}`,
-                `Location: ${resumeData.contact.location}`,
-                `Status: ${resumeData.contact.availability}`
+                `Name: ${resumeData.personalInfo.name}`,
+                `Title: ${resumeData.personalInfo.title}`,
+                `Email: ${resumeData.personalInfo.email}`,
+                `Phone: ${resumeData.personalInfo.phone}`,
+                `Website: ${resumeData.personalInfo.website}`,
+                `Location: ${resumeData.personalInfo.location}`
               ],
               type: 'success'
             };
@@ -246,35 +293,21 @@ const Terminal = ({ onSectionChange }: TerminalProps) => {
         break;
 
       case 'skills':
-        const levelFilter = args[0];
-        let filteredSkills = resumeData.skills;
+        const skillsOutput = [];
+        skillsOutput.push('🛠️ Technical Skills');
+        skillsOutput.push('');
         
-        if (levelFilter) {
-          filteredSkills = resumeData.skills.filter(skill => skill.level === levelFilter);
-          if (filteredSkills.length === 0) {
-            return {
-              command: cmd,
-              output: [
-                `No skills found with level "${levelFilter}".`,
-                'Available levels: beginner, intermediate, advanced, expert'
-              ],
-              type: 'error'
-            };
-          }
-        }
-
+        Object.entries(resumeData.skills).forEach(([category, skills]) => {
+          skillsOutput.push(`${category.toUpperCase()}:`);
+          skills.forEach(skill => {
+            skillsOutput.push(`  • ${skill}`);
+          });
+          skillsOutput.push('');
+        });
+        
         return {
           command: cmd,
-          output: [
-            '🛠️ Technical Skills',
-            levelFilter ? `Filtered by: ${levelFilter}` : '',
-            '',
-            'SKILL                LEVEL        TAGS',
-            '─'.repeat(50),
-            ...filteredSkills.map(skill => 
-              `${skill.name.padEnd(20)} ${skill.level.padEnd(12)} [${skill.tags.join(', ')}]`
-            )
-          ].filter(Boolean),
+          output: skillsOutput,
           type: 'success'
         };
 
@@ -295,7 +328,69 @@ const Terminal = ({ onSectionChange }: TerminalProps) => {
             '',
             'GitHub     → github.com/kundanray',
             'LinkedIn   → linkedin.com/in/kundanray',
-            'X/Twitter  → x.com/kundanray'
+            'X/Twitter  → x.com/kundanray',
+            'Website    → kundanray.com.np'
+          ],
+          type: 'success'
+        };
+
+      case 'life-events':
+        let filteredEvents = resumeData.lifeEvents;
+        
+        // Check for tag filter (e.g., life-events --career)
+        if (args[0] && args[0].startsWith('--')) {
+          const tag = args[0].substring(2);
+          filteredEvents = resumeData.lifeEvents.filter(event => 
+            event.tags.includes(tag) || event.type === tag
+          );
+          
+          if (filteredEvents.length === 0) {
+            return {
+              command: cmd,
+              output: [
+                `No life events found with tag "${tag}".`,
+                'Available tags: ' + Array.from(new Set(resumeData.lifeEvents.flatMap(e => e.tags))).join(', ')
+              ],
+              type: 'error'
+            };
+          }
+        }
+        
+        return {
+          command: cmd,
+          output: [
+            '📅 Life Events Timeline',
+            args[0] ? `Filtered by: ${args[0].substring(2)}` : '',
+            '',
+            ...filteredEvents.map(event => [
+              `${new Date(event.date).getFullYear()} - ${event.title} ${event.type === 'milestone' ? '🎆' : event.type === 'career' ? '💼' : event.type === 'achievement' ? '🏆' : '📚'}`,
+              `  ${event.description}`,
+              `  Impact: ${event.impact}`,
+              `  Tags: ${event.tags.join(', ')}`,
+              ''
+            ]).flat()
+          ].filter(Boolean),
+          type: 'success'
+        };
+
+      case 'achievements':
+        return {
+          command: cmd,
+          output: [
+            '🏆 Major Achievements',
+            '',
+            ...resumeData.achievements.map(achievement => `• ${achievement}`)
+          ],
+          type: 'success'
+        };
+
+      case 'interests':
+        return {
+          command: cmd,
+          output: [
+            '🎨 Personal Interests',
+            '',
+            ...resumeData.interests.map(interest => `• ${interest}`)
           ],
           type: 'success'
         };
@@ -326,32 +421,121 @@ const Terminal = ({ onSectionChange }: TerminalProps) => {
           type: 'success'
         };
 
-      default:
-        const ai = await getAIResponse(cmd, resumeData);
+      case 'timeline':
+        const sortedEvents = [...resumeData.lifeEvents].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         return {
           command: cmd,
-          output: [ai],
+          output: [
+            '📅 Complete Life Timeline',
+            '',
+            ...sortedEvents.map(event => 
+              `${new Date(event.date).toISOString().split('T')[0]} | ${event.title} (${event.type})`
+            )
+          ],
+          type: 'success'
+        };
+
+      case 'search':
+        if (!args[0]) {
+          return {
+            command: cmd,
+            output: [
+              'Usage: search <term>',
+              'Search through life events and resume data',
+              'Example: search startup'
+            ],
+            type: 'error'
+          };
+        }
+        
+        const searchTerm = args.join(' ').toLowerCase();
+        const matchingEvents = resumeData.lifeEvents.filter(event =>
+          event.title.toLowerCase().includes(searchTerm) ||
+          event.description.toLowerCase().includes(searchTerm) ||
+          event.tags.some(tag => tag.toLowerCase().includes(searchTerm))
+        );
+        
+        if (matchingEvents.length === 0) {
+          return {
+            command: cmd,
+            output: [`No results found for "${searchTerm}"`],
+            type: 'error'
+          };
+        }
+        
+        return {
+          command: cmd,
+          output: [
+            `🔍 Search Results for "${searchTerm}" (${matchingEvents.length} found):`,
+            '',
+            ...matchingEvents.map(event => [
+              `${new Date(event.date).getFullYear()} - ${event.title}`,
+              `  ${event.description}`,
+              ''
+            ]).flat()
+          ],
+          type: 'success'
+        };
+
+      default:
+        // For unrecognized commands, try AI assistance
+        const ai = await getAIResponse(`Command: ${cmd}`, resumeData);
+        return {
+          command: cmd,
+          output: [
+            `Command '${command}' not recognized. AI Assistant:`,
+            '',
+            ai,
+            '',
+            'Type "help" for available commands.'
+          ],
           type: 'info'
         };
     }
+
+    // This should never be reached due to the default case above
+    return {
+      command: cmd,
+      output: ['Unknown command. Type "help" for available commands.'],
+      type: 'error'
+    };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || isProcessing) return;
 
     const cmd = input;
-    const result = await parseCommand(cmd);
-
-    if (result.command === 'clear') {
-      setHistory([]);
-    } else {
-      setHistory(prev => [...prev, result]);
-    }
-
-    setCommandHistory(prev => [...prev, cmd]);
-    setHistoryIndex(-1);
+    setIsProcessing(true);
+    
+    // Add command to history immediately  
+    setHistory(prev => [...prev, {
+      command: cmd,
+      output: [],
+      type: 'info'
+    }]);
+    
     setInput('');
+
+    try {
+      const result = await parseCommand(cmd);
+
+      if (result.command === 'clear') {
+        setHistory([]);
+      } else {
+        // Update the last entry with results
+        setHistory(prev => {
+          const newHistory = [...prev];
+          newHistory[newHistory.length - 1] = result;
+          return newHistory;
+        });
+      }
+
+      setCommandHistory(prev => [...prev, cmd]);
+      setHistoryIndex(-1);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -396,7 +580,7 @@ const Terminal = ({ onSectionChange }: TerminalProps) => {
   };
 
   return (
-    <div className="h-full bg-terminal-bg border border-visual-border rounded-terminal shadow-terminal">
+    <div className="h-96 w-full max-w-4xl bg-terminal-bg border border-visual-border rounded-terminal shadow-terminal">
       {/* Terminal Header */}
       <div className="flex items-center justify-between px-4 py-2 bg-terminal-chrome border-b border-visual-border rounded-t-terminal">
         <div className="flex items-center space-x-2">
@@ -409,23 +593,15 @@ const Terminal = ({ onSectionChange }: TerminalProps) => {
             kundan@portfolio: ~
           </span>
         </div>
-        <div className="flex items-center space-x-2">
-          <button className="p-1 hover:bg-visual-border rounded transition-colors">
-            <Minimize2 size={14} className="text-muted-foreground" />
-          </button>
-          <button className="p-1 hover:bg-visual-border rounded transition-colors">
-            <Maximize2 size={14} className="text-muted-foreground" />
-          </button>
-          <button className="p-1 hover:bg-visual-border rounded transition-colors">
-            <X size={14} className="text-muted-foreground" />
-          </button>
+        <div className="text-sm text-muted-foreground font-mono">
+          AI Terminal v2.0
         </div>
       </div>
 
       {/* Terminal Content */}
       <div 
         ref={terminalRef}
-        className="h-[calc(100%-3rem)] overflow-y-auto p-terminal font-mono text-sm"
+        className="h-80 overflow-y-auto p-terminal font-mono text-sm"
       >
         {/* Command History */}
         {history.map((item, index) => (
@@ -437,7 +613,11 @@ const Terminal = ({ onSectionChange }: TerminalProps) => {
               </div>
             )}
             <div className={`whitespace-pre-wrap ${getOutputColor(item.type)}`}>
-              {item.output.join('\n')}
+              {item.output.length === 0 && isProcessing && index === history.length - 1 ? (
+                <FunnyLoader />
+              ) : (
+                item.output.join('\n')
+              )}
             </div>
           </div>
         ))}
@@ -445,18 +625,36 @@ const Terminal = ({ onSectionChange }: TerminalProps) => {
         {/* Current Input */}
         <form onSubmit={handleSubmit} className="flex items-center space-x-2">
           <span className="text-terminal-prompt">kundan@ray.dev$</span>
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="flex-1 bg-transparent border-none outline-none text-terminal-accent font-mono"
-            placeholder="Type 'help' for commands..."
-            spellCheck={false}
-            autoComplete="off"
-          />
-          <span className="text-terminal-accent animate-cursor">▊</span>
+          <div className="flex-1 relative">
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={isProcessing}
+              className="w-full bg-transparent border-none outline-none text-terminal-accent font-mono disabled:opacity-50"
+              placeholder={isProcessing ? "Processing..." : "Type 'help' for commands..."}
+              spellCheck={false}
+              autoComplete="off"
+            />
+            {!isProcessing && (
+              <span className="absolute top-0 text-terminal-accent animate-pulse" 
+                    style={{ left: `${input.length * 0.6}em` }}>
+                ▊
+              </span>
+            )}
+          </div>
+          {isProcessing && (
+            <div className="flex items-center space-x-2 text-accent-primary">
+              <div className="flex space-x-1">
+                <div className="w-1 h-1 bg-current rounded-full animate-ping" style={{ animationDelay: '0ms' }}></div>
+                <div className="w-1 h-1 bg-current rounded-full animate-ping" style={{ animationDelay: '100ms' }}></div>
+                <div className="w-1 h-1 bg-current rounded-full animate-ping" style={{ animationDelay: '200ms' }}></div>
+              </div>
+              <span className="text-xs animate-pulse">🤔 Thinking...</span>
+            </div>
+          )}
         </form>
       </div>
     </div>

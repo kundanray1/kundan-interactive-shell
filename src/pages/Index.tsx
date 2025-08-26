@@ -44,7 +44,10 @@ const Index = () => {
       {/* Main Layout */}
       <div className="grid lg:grid-cols-2 h-screen">
         {/* Visual Pane - Left Side */}
-        <div className="order-2 lg:order-1">
+        <div 
+          className="order-2 lg:order-1 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: 'url(/left_background.webp)' }}
+        >
           <VisualPane 
             activeSection={activeSection}
             onSectionClick={handleSectionChange}
