@@ -1,8 +1,160 @@
-import { useState, useRef, useEffect } from 'react';
-import { Phone, Mail, MapPin, Globe, GitBranch, Linkedin } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Phone, Mail, MapPin, Globe, GitBranch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useSpring, animated } from '@react-spring/web';
 // Using profile photo from public folder
 const profilePhoto = '/IMG_2298.webp';
+
+// Multi-segment rope physics component
+const LanyardStraps = ({ position, lanyardStretch, isDragging, isAnimating }: {
+  position: { x: number; y: number };
+  lanyardStretch: number;
+  isDragging: boolean;
+  isAnimating: boolean;
+}) => {
+  // Configuration for rope physics
+  const numSegments = 8;
+  
+  // Calculate rope segments with realistic physics
+  const calculateRopeSegments = (startX: number, endX: number, startY: number, endY: number) => {
+    const segments: Array<{ x: number; y: number }> = [];
+    const totalDistance = Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
+    const gravity = 0.3; // Gravity effect on rope sag
+    
+    for (let i = 0; i <= numSegments; i++) {
+      const t = i / numSegments; // Parameter from 0 to 1
+      
+      // Linear interpolation for base position
+      const baseX = startX + (endX - startX) * t;
+      const baseY = startY + (endY - startY) * t;
+      
+      // Add realistic sag (catenary-like curve)
+      const sag = Math.sin(t * Math.PI) * (gravity * totalDistance * 0.1 + lanyardStretch * 0.3);
+      
+      segments.push({
+        x: baseX,
+        y: baseY + sag
+      });
+    }
+    
+    return segments;
+  };
+
+  // Get container dimensions for proper positioning
+  const containerWidth = window.innerWidth / 2; // Left half of screen
+  const centerX = containerWidth / 2;
+  
+  // Card positioning info: left at 50% - 160px, width 320px (w-80)
+  // So card left edge is at centerX - 160, right edge at centerX + 160
+  
+  // Left strap segments - connect to card's left attachment point
+  const leftStrapStart = { x: centerX - 60, y: 0 };
+  const leftStrapEnd = { x: centerX - 140 + position.x, y: 170 + position.y + lanyardStretch };
+  const leftSegments = calculateRopeSegments(leftStrapStart.x, leftStrapEnd.x, leftStrapStart.y, leftStrapEnd.y);
+  
+  // Right strap segments - connect to card's right attachment point  
+  const rightStrapStart = { x: centerX + 60, y: 0 };
+  const rightStrapEnd = { x: centerX + 140 + position.x, y: 170 + position.y + lanyardStretch };
+  const rightSegments = calculateRopeSegments(rightStrapStart.x, rightStrapEnd.x, rightStrapStart.y, rightStrapEnd.y);
+
+  // Create smooth path from segments
+  const createPathFromSegments = (segments: Array<{ x: number; y: number }>) => {
+    if (segments.length < 2) return '';
+    
+    let path = `M ${segments[0].x} ${segments[0].y}`;
+    
+    // Use quadratic curves for smoother rope segments
+    for (let i = 1; i < segments.length - 1; i++) {
+      const current = segments[i];
+      const next = segments[i + 1];
+      const controlX = current.x;
+      const controlY = current.y;
+      
+      path += ` Q ${controlX} ${controlY} ${(current.x + next.x) / 2} ${(current.y + next.y) / 2}`;
+    }
+    
+    // End point
+    const last = segments[segments.length - 1];
+    path += ` T ${last.x} ${last.y}`;
+    
+    return path;
+  };
+
+  // Create single continuous strap using SVG
+  const createContinuousStrap = (segments: Array<{ x: number; y: number }>, isLeft: boolean) => {
+    if (segments.length < 2) return null;
+    
+    const strapWidth = 32;
+    const pathData = createPathFromSegments(segments);
+    
+    return (
+      <svg
+        key={isLeft ? 'left' : 'right'}
+        className={`absolute top-0 ${!isDragging && !isAnimating ? 'transition-all duration-200 ease-out' : ''}`}
+        style={{
+          left: '0',
+          width: '100%',
+          height: `${200 + position.y + lanyardStretch + 100}px`,
+          overflow: 'visible'
+        }}
+      >
+        {/* Main strap path */}
+        <path
+          d={pathData}
+          stroke="black"
+          strokeWidth={strapWidth}
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        
+        {/* Watermark text along the path */}
+        <defs>
+          <path
+            id={`strap-path-${isLeft ? 'left' : 'right'}`}
+            d={pathData}
+          />
+        </defs>
+        
+        <text
+          className="text-white text-[8px] font-mono font-bold opacity-60"
+          fill="white"
+          fontSize="8"
+          fontFamily="monospace"
+          letterSpacing="2px"
+        >
+          <textPath
+            href={`#strap-path-${isLeft ? 'left' : 'right'}`}
+            startOffset="10%"
+          >
+            KUNDAN RAY • KUNDAN RAY • KUNDAN RAY • KUNDAN RAY
+          </textPath>
+        </text>
+      </svg>
+    );
+  };
+
+  return (
+    <div className="absolute top-0 left-0 right-0">
+      {/* Left Strap - Rectangular segments with watermark */}
+      {createRectangularStrap(leftSegments, true)}
+      
+      {/* Right Strap - Rectangular segments with watermark */}
+      {createRectangularStrap(rightSegments, false)}
+
+      {/* Connection bridge spanning between strap endpoints */}
+      <div 
+        className={`absolute h-2 bg-black ${!isDragging && !isAnimating ? 'transition-all duration-200 ease-out' : ''}`}
+        style={{
+          left: `${centerX - 140 + position.x}px`,
+          top: `${170 + position.y + lanyardStretch}px`,
+          width: `${280}px`, // Spans from left strap to right strap
+          transform: `rotate(${position.x * 0.01}deg)`
+        }}
+      />
+    </div>
+  );
+};
 
 interface HangingIDCardProps {
   activeSection?: string;
@@ -18,8 +170,7 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
   const cardRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number>();
 
-  const handlePointerDown = (e: React.PointerEvent) => {
-    if (!cardRef.current) return;
+  const handlePointerDown = useCallback((e: React.PointerEvent | PointerEvent) => {
     e.preventDefault();
     
     // Cancel any ongoing animation
@@ -28,7 +179,8 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
       setIsAnimating(false);
     }
 
-    const container = cardRef.current.parentElement;
+    // Get the left container as reference (entire left side)
+    const container = document.querySelector('.h-screen.relative.overflow-hidden') as HTMLElement;
     if (!container) return;
 
     const containerRect = container.getBoundingClientRect();
@@ -37,15 +189,13 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
       y: e.clientY - containerRect.top - position.y
     });
     setIsDragging(true);
-  };
+  }, [position.x, position.y]);
 
   useEffect(() => {
     if (!isDragging) return;
 
     const handlePointerMove = (e: PointerEvent) => {
-      if (!cardRef.current) return;
-
-      const container = cardRef.current.parentElement;
+      const container = document.querySelector('.h-screen.relative.overflow-hidden') as HTMLElement;
       if (!container) return;
 
       const containerRect = container.getBoundingClientRect();
@@ -53,24 +203,27 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
       const newX = e.clientX - containerRect.left - dragStart.x;
       const newY = e.clientY - containerRect.top - dragStart.y;
 
-      // More realistic constraints - lanyard physics
+      // Realistic lanyard physics - much wider movement area
       const centerX = containerRect.width / 2;
-      const maxSwing = 150; // Maximum horizontal swing
-      const maxDrop = 100;  // Maximum vertical drop
+      const maxSwing = containerRect.width / 2 - 80; // Can move almost to edges
+      const maxDrop = containerRect.height / 2; // Can drop much further
       
+      // Allow movement up as well (lanyard can be pulled up)
       const constrainedX = Math.max(-maxSwing, Math.min(maxSwing, newX));
-      const constrainedY = Math.max(-30, Math.min(maxDrop, newY));
+      const constrainedY = Math.max(-80, Math.min(maxDrop, newY));
 
       setPosition({
         x: constrainedX,
         y: constrainedY
       });
 
-      // Calculate lanyard stretch based on distance and position
+      // Realistic lanyard stretch - cloth behavior
       const horizontalDistance = Math.abs(constrainedX);
-      const verticalDistance = Math.max(0, constrainedY);
+      const verticalDistance = Math.max(0, constrainedY + 80); // Account for upward movement
       const totalDistance = Math.sqrt(horizontalDistance * horizontalDistance + verticalDistance * verticalDistance);
-      const stretch = Math.min(totalDistance * 0.2, 40);
+      
+      // Cloth stretches more realistically
+      const stretch = Math.min(totalDistance * 0.15, 60);
       setLanyardStretch(stretch);
     };
 
@@ -121,6 +274,28 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
     };
   }, [isDragging, dragStart, position, lanyardStretch]);
 
+  // Add global pointer events for entire left container
+  useEffect(() => {
+    const container = document.querySelector('.h-screen.relative.overflow-hidden') as HTMLElement;
+    if (!container) return;
+
+    const handleContainerPointerDown = (e: PointerEvent) => {
+      // Only handle if clicking in the container area (not on buttons/navigation)
+      const target = e.target as HTMLElement;
+      if (target.closest('button') || target.closest('.navigation')) return;
+      
+      handlePointerDown(e);
+    };
+
+    container.addEventListener('pointerdown', handleContainerPointerDown);
+    container.style.cursor = 'grab';
+
+    return () => {
+      container.removeEventListener('pointerdown', handleContainerPointerDown);
+      container.style.cursor = '';
+    };
+  }, [handlePointerDown]);
+
   // Cleanup animation on unmount
   useEffect(() => {
     return () => {
@@ -143,70 +318,21 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
     if (type === 'phone') {
       window.open('tel:+977-9800000000');
     } else if (type === 'email') {
-      window.open('mailto:hello@kundan.ray');
+      window.open('mailto:raykundan57@gmail.com');
     } else {
       window.open('https://kundanray.com.np', '_blank');
     }
   };
 
   return (
-    <div className="h-full relative overflow-hidden">
+    <div className="h-screen relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0 bg-gradient-primary opacity-10" />
       <div className="absolute top-20 left-10 w-32 h-32 bg-accent-primary/5 rounded-full blur-xl animate-float" />
       <div className="absolute bottom-20 right-10 w-24 h-24 bg-accent-secondary/5 rounded-full blur-xl animate-float" style={{ animationDelay: '1s' }} />
 
-      {/* Neck Straps - Two straps from top corners */}
-      <div className="absolute top-0 left-0 right-0">
-        {/* Left Strap */}
-        <div 
-          className={`absolute top-0 w-6 bg-black transform origin-top ${!isDragging && !isAnimating ? 'transition-all duration-300 ease-out' : ''}`}
-          style={{
-            left: `calc(50% - 90px + ${position.x * 0.7}px)`,
-            height: `${170 + position.y + lanyardStretch}px`,
-            transform: `rotate(${position.x * 0.05}deg)`,
-            transformOrigin: 'top center'
-          }}
-        >
-          {/* Repeating name pattern on left strap */}
-          <div className="absolute inset-0 flex flex-col items-center justify-start text-[8px] font-mono text-white leading-relaxed pt-8 overflow-hidden">
-            {Array.from({ length: Math.min(3, Math.ceil((170 + position.y + lanyardStretch) / 60)) }, (_, i) => (
-              <div key={i} className="whitespace-nowrap transform rotate-90 mb-12">
-                KUNDAN RAY
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Right Strap */}
-        <div 
-          className={`absolute top-0 w-6 bg-black transform origin-top ${!isDragging && !isAnimating ? 'transition-all duration-300 ease-out' : ''}`}
-          style={{
-            left: `calc(50% + 54px + ${position.x * 0.7}px)`,
-            height: `${170 + position.y + lanyardStretch}px`,
-            transform: `rotate(${-position.x * 0.05}deg)`,
-            transformOrigin: 'top center'
-          }}
-        >
-          {/* Repeating name pattern on right strap */}
-          <div className="absolute inset-0 flex flex-col items-center justify-start text-[8px] font-mono text-white leading-relaxed pt-8 overflow-hidden">
-            {Array.from({ length: Math.min(3, Math.ceil((170 + position.y + lanyardStretch) / 60)) }, (_, i) => (
-              <div key={i} className="whitespace-nowrap transform rotate-90 mb-12">
-                KUNDAN RAY
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Connection point at top of card */}
-        <div 
-          className={`absolute w-12 h-4 bg-black rounded-sm shadow-sm ${!isDragging && !isAnimating ? 'transition-all duration-300 ease-out' : ''}`}
-          style={{
-            left: `calc(50% - 24px + ${position.x}px)`,
-            top: `${165 + position.y + lanyardStretch}px`
-          }}
-        />
-      </div>
+      {/* Realistic Lanyard Straps with Multi-Segment Rope Physics */}
+      <LanyardStraps position={position} lanyardStretch={lanyardStretch} isDragging={isDragging} isAnimating={isAnimating} />
 
       {/* Hanging ID Card */}
       <div
@@ -223,8 +349,8 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
         {/* Card Shadow */}
         <div className="absolute inset-0 bg-black/20 rounded-lg blur-sm transform translate-y-3 translate-x-1 opacity-40" />
         
-        {/* Main ID Card - Black and White Design */}
-        <div className="relative w-80 h-[26rem] bg-white border-2 border-black rounded-lg overflow-hidden shadow-2xl">
+        {/* Main ID Card - Black and White Design - Longer */}
+        <div className="relative w-80 h-[32rem] bg-white border-2 border-black rounded-lg overflow-hidden shadow-2xl">
           {/* Card Header - Black */}
           <div className="h-16 bg-black relative flex items-center justify-between px-4">
             <div className="text-white">
@@ -256,13 +382,10 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
 
             {/* Quick Info */}
             <div className="space-y-1 mb-3 text-xs font-mono">
+         
               <div className="flex items-center justify-center space-x-1 text-black">
                 <span>●</span>
-                <span>kundanray.com.np</span>
-              </div>
-              <div className="flex items-center justify-center space-x-1 text-black">
-                <span>●</span>
-                <span>hello@kundan.ray</span>
+                <span>raykundan57@gmail.com</span>
               </div>
             </div>
 
@@ -297,7 +420,7 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
                 <GitBranch size={12} />
               </button>
               <button className="w-6 h-6 bg-black hover:bg-gray-800 text-white rounded flex items-center justify-center transition-colors">
-                <Linkedin size={12} />
+                <Globe size={12} />
               </button>
               <button className="w-6 h-6 bg-black hover:bg-gray-800 text-white rounded flex items-center justify-center transition-colors">
                 <Globe size={12} />

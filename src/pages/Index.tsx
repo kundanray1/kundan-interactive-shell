@@ -55,7 +55,7 @@ const Index = () => {
         </div>
 
         {/* Terminal Pane - Right Side */}
-        <div className="order-1 lg:order-2 flex flex-col">
+        <div className="order-1 lg:order-2 flex flex-col h-screen">
           {/* Section Tags */}
           <SectionTags 
             activeSection={activeSection}
@@ -63,7 +63,7 @@ const Index = () => {
           />
           
           {/* Terminal */}
-          <div className="flex-1 p-4">
+          <div className="flex-1 p-4 min-h-0">
             <Terminal onSectionChange={handleSectionChange} />
           </div>
         </div>
