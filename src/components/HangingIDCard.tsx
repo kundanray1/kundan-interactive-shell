@@ -47,13 +47,13 @@ const LanyardStraps = ({ position, lanyardStretch, isDragging, isAnimating }: {
   // Card positioning info: left at 50% - 160px, width 320px (w-80)
   // So card left edge is at centerX - 160, right edge at centerX + 160
   
-  // Left strap segments - connect to card's left attachment point
-  const leftStrapStart = { x: centerX - 60, y: 0 };
+  // Left strap segments - start further apart at top, connect to card's left attachment point
+  const leftStrapStart = { x: centerX - 120, y: 0 };
   const leftStrapEnd = { x: centerX - 140 + position.x, y: 170 + position.y + lanyardStretch };
   const leftSegments = calculateRopeSegments(leftStrapStart.x, leftStrapEnd.x, leftStrapStart.y, leftStrapEnd.y);
   
-  // Right strap segments - connect to card's right attachment point  
-  const rightStrapStart = { x: centerX + 60, y: 0 };
+  // Right strap segments - start further apart at top, connect to card's right attachment point  
+  const rightStrapStart = { x: centerX + 120, y: 0 };
   const rightStrapEnd = { x: centerX + 140 + position.x, y: 170 + position.y + lanyardStretch };
   const rightSegments = calculateRopeSegments(rightStrapStart.x, rightStrapEnd.x, rightStrapStart.y, rightStrapEnd.y);
 
@@ -136,11 +136,27 @@ const LanyardStraps = ({ position, lanyardStretch, isDragging, isAnimating }: {
 
   return (
     <div className="absolute top-0 left-0 right-0">
-      {/* Left Strap - Rectangular segments with watermark */}
-      {createRectangularStrap(leftSegments, true)}
+      {/* Left Strap - Single continuous strap */}
+      {createContinuousStrap(leftSegments, true)}
       
-      {/* Right Strap - Rectangular segments with watermark */}
-      {createRectangularStrap(rightSegments, false)}
+      {/* Right Strap - Single continuous strap */}
+      {createContinuousStrap(rightSegments, false)}
+
+      {/* Anchor points at the top where straps attach */}
+      <div 
+        className="absolute w-4 h-4 bg-gray-800 rounded-full shadow-sm border-2 border-gray-600"
+        style={{
+          left: `${centerX - 120 - 8}px`,
+          top: '-2px'
+        }}
+      />
+      <div 
+        className="absolute w-4 h-4 bg-gray-800 rounded-full shadow-sm border-2 border-gray-600"
+        style={{
+          left: `${centerX + 120 - 8}px`,
+          top: '-2px'
+        }}
+      />
 
       {/* Connection bridge spanning between strap endpoints */}
       <div 
@@ -415,16 +431,11 @@ const HangingIDCard = ({ activeSection, onSectionClick }: HangingIDCardProps) =>
             </div>
 
             {/* Social Links */}
-            <div className="flex justify-center space-x-2">
+            <div className="flex justify-center space-x-2 mb-4 ">
               <button className="w-6 h-6 bg-black hover:bg-gray-800 text-white rounded flex items-center justify-center transition-colors">
                 <GitBranch size={12} />
               </button>
-              <button className="w-6 h-6 bg-black hover:bg-gray-800 text-white rounded flex items-center justify-center transition-colors">
-                <Globe size={12} />
-              </button>
-              <button className="w-6 h-6 bg-black hover:bg-gray-800 text-white rounded flex items-center justify-center transition-colors">
-                <Globe size={12} />
-              </button>
+        
             </div>
           </div>
 
