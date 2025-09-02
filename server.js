@@ -69,16 +69,57 @@ app.post('/api/chat-assistant', async (req, res) => {
       });
     }
 
-    // Construct full Gemini API request with context
+    // Create a detailed timeline context for better AI understanding
+    const timelineContext = lifeEventsData.lifeEvents ? 
+      lifeEventsData.lifeEvents
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        .map(event => `${event.date}: ${event.title} - ${event.description} (Impact: ${event.impact}) [Tags: ${event.tags.join(', ')}]`)
+        .join('\n')
+      : 'No timeline data available';
+
+    const personalTraitsContext = lifeEventsData.personalTraits ?
+      lifeEventsData.personalTraits
+        .map(trait => `${trait.trait}: ${trait.description}`)
+        .join('\n')
+      : '';
+
+    const skillsContext = lifeEventsData.skills ?
+      Object.entries(lifeEventsData.skills)
+        .map(([category, skills]) => `${category}: ${skills.join(', ')}`)
+        .join('\n')
+      : '';
+
+    // Construct full Gemini API request with enhanced context
     const enhancedContents = [{
       parts: [{
-        text: `You are Kundan Ray's AI assistant integrated into his interactive resume terminal. You have access to his life events and professional information.
+        text: `You are Kundan Ray's AI assistant integrated into his interactive resume terminal. You have deep knowledge of his life journey, personality, and professional development.
 
-Context - Life Events Data: ${JSON.stringify(lifeEventsData)}
+=== PERSONAL INFO ===
+Name: ${lifeEventsData.personalInfo?.name || 'Kundan Ray'}
+Title: ${lifeEventsData.personalInfo?.title || 'Senior Full-Stack Engineer'}
+Location: ${lifeEventsData.personalInfo?.location || 'Kathmandu, Nepal → Melbourne, Australia'}
+Email: ${lifeEventsData.personalInfo?.email || 'raykundan57@gmail.com'}
 
-User Question/Command: ${prompt}
+=== PERSONALITY TRAITS ===
+${personalTraitsContext}
 
-Please respond naturally and helpfully. If the user is asking about Kundan's life, experiences, or career, use the context provided. If they're giving terminal commands, respond appropriately for a terminal interface.`
+=== TECHNICAL SKILLS ===
+${skillsContext}
+
+=== CHRONOLOGICAL LIFE TIMELINE ===
+${timelineContext}
+
+=== ACHIEVEMENTS ===
+${lifeEventsData.achievements ? lifeEventsData.achievements.join('\n') : 'No achievements data'}
+
+=== PROJECTS ===
+${lifeEventsData.projects ? lifeEventsData.projects.map(p => `${p.name}: ${p.description} (Tech: ${p.tech.join(', ')}) - ${p.status}`).join('\n') : 'No projects data'}
+
+=== USER QUESTION/COMMAND ===
+${prompt}
+
+=== INSTRUCTIONS ===
+Please respond naturally and helpfully based on this comprehensive context. You understand Kundan's journey from childhood in rural Nepal to becoming a senior engineer, his experiences with teaching, startup founding, health tech work, and his upcoming move to Melbourne. Use specific details from the timeline when relevant. If users ask about terminal commands, respond appropriately for a terminal interface while staying in character as Kundan's AI assistant.`
       }]
     }];
 

@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
-import Terminal from '@/components/Terminal';
+import { useState, useEffect, useRef } from 'react';
+import Terminal, { TerminalHandle } from '@/components/Terminal';
 import VisualPane from '@/components/VisualPane';
 import SectionTags from '@/components/SectionTags';
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState<string>('about');
+  const terminalRef = useRef<TerminalHandle>(null);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -39,6 +40,10 @@ const Index = () => {
     setActiveSection(section);
   };
 
+  const handleCommandInsert = (command: string) => {
+    terminalRef.current?.insertCommand(command);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Main Layout */}
@@ -60,11 +65,12 @@ const Index = () => {
           <SectionTags 
             activeSection={activeSection}
             onSectionClick={handleSectionChange}
+            onCommandInsert={handleCommandInsert}
           />
           
           {/* Terminal */}
           <div className="flex-1 p-4 min-h-0">
-            <Terminal onSectionChange={handleSectionChange} />
+            <Terminal ref={terminalRef} onSectionChange={handleSectionChange} />
           </div>
         </div>
       </div>

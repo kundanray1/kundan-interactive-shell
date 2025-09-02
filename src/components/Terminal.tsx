@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 // Removed unused imports for terminal buttons
 import { getAIResponse } from '@/lib/openai';
 import lifeEventsData from '@/data/lifeEvents.json';
@@ -57,15 +57,20 @@ interface TerminalProps {
   onSectionChange?: (section: string) => void;
 }
 
+export interface TerminalHandle {
+  insertCommand: (command: string) => void;
+}
+
 interface CommandHistory {
   command: string;
   output: string[];
   type: 'success' | 'error' | 'info';
 }
 
-const Terminal = ({ onSectionChange }: TerminalProps) => {
+const Terminal = forwardRef<TerminalHandle, TerminalProps>(({ onSectionChange }, ref) => {
   const [input, setInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const [history, setHistory] = useState<CommandHistory[]>([
     {
       command: 'welcome',
@@ -257,7 +262,6 @@ const Terminal = ({ onSectionChange }: TerminalProps) => {
                 `Name: ${resumeData.personalInfo.name}`,
                 `Title: ${resumeData.personalInfo.title}`,
                 `Email: ${resumeData.personalInfo.email}`,
-                `Phone: ${resumeData.personalInfo.phone}`,
                 `Website: ${resumeData.personalInfo.website}`,
                 `Location: ${resumeData.personalInfo.location}`
               ],
@@ -571,6 +575,29 @@ const Terminal = ({ onSectionChange }: TerminalProps) => {
     inputRef.current?.focus();
   }, []);
 
+  // Re-focus input after AI responses
+  useEffect(() => {
+    if (!isProcessing) {
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isProcessing]);
+
+  // Handle terminal container click to focus input
+  const handleTerminalClick = () => {
+    inputRef.current?.focus();
+  };
+
+  // Expose insertCommand method via ref
+  useImperativeHandle(ref, () => ({
+    insertCommand: (command: string) => {
+      setInput(command);
+      inputRef.current?.focus();
+    }
+  }));
+
   const getOutputColor = (type: CommandHistory['type']) => {
     switch (type) {
       case 'error': return 'text-terminal-error';
@@ -580,7 +607,12 @@ const Terminal = ({ onSectionChange }: TerminalProps) => {
   };
 
   return (
-    <div className="h-full w-full max-w-4xl bg-terminal-bg border border-visual-border rounded-terminal shadow-terminal flex flex-col">
+    <div 
+      className={`h-full w-full max-w-4xl bg-terminal-bg border rounded-terminal shadow-terminal flex flex-col cursor-text transition-all duration-200 ${
+        isFocused ? 'border-accent-primary shadow-glow' : 'border-visual-border'
+      }`}
+      onClick={handleTerminalClick}
+    >
       {/* Terminal Header */}
       <div className="flex items-center justify-between px-4 py-2 bg-terminal-chrome border-b border-visual-border rounded-t-terminal">
         <div className="flex items-center space-x-2">
@@ -632,6 +664,8 @@ const Terminal = ({ onSectionChange }: TerminalProps) => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
               disabled={isProcessing}
               className="w-full bg-transparent border-none outline-none text-terminal-accent font-mono disabled:opacity-50"
               placeholder={isProcessing ? "Processing..." : "Type 'help' for commands..."}
@@ -659,6 +693,6 @@ const Terminal = ({ onSectionChange }: TerminalProps) => {
       </div>
     </div>
   );
-};
+});
 
 export default Terminal;

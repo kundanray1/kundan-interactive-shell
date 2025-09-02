@@ -3,9 +3,10 @@ import { useState } from 'react';
 interface SectionTagsProps {
   activeSection?: string;
   onSectionClick?: (section: string) => void;
+  onCommandInsert?: (command: string) => void;
 }
 
-const SectionTags = ({ activeSection, onSectionClick }: SectionTagsProps) => {
+const SectionTags = ({ activeSection, onSectionClick, onCommandInsert }: SectionTagsProps) => {
   const [hoveredTag, setHoveredTag] = useState<string | null>(null);
 
   const sections = [
@@ -22,10 +23,16 @@ const SectionTags = ({ activeSection, onSectionClick }: SectionTagsProps) => {
         const isActive = activeSection === section.id;
         const isHovered = hoveredTag === section.id;
         
+        const handleClick = (e: React.MouseEvent) => {
+          // Regular click inserts command in terminal AND changes section
+          onCommandInsert?.(`open ${section.id}`);
+          onSectionClick?.(section.id);
+        };
+
         return (
           <button
             key={section.id}
-            onClick={() => onSectionClick?.(section.id)}
+            onClick={handleClick}
             onMouseEnter={() => setHoveredTag(section.id)}
             onMouseLeave={() => setHoveredTag(null)}
             className={`
@@ -37,7 +44,7 @@ const SectionTags = ({ activeSection, onSectionClick }: SectionTagsProps) => {
               animate-slide-up
             `}
             style={{ animationDelay: `${index * 50}ms` }}
-            title={`Press ${section.shortcut} or click to run: open ${section.id}`}
+            title={`Press ${section.shortcut} or click to insert command: open ${section.id}`}
           >
             <span className="relative z-10">{section.label}</span>
             
