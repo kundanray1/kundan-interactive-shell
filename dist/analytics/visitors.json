@@ -1,0 +1,33 @@
+{
+  "visitors": [
+    {
+      "id": "66e14923071b6631",
+      "timestamp": "2025-09-04T05:32:00.257Z",
+      "ip": "::1",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
+      "browser": "Chrome",
+      "os": "macOS",
+      "device": "Desktop",
+      "location": {
+        "country": "Local",
+        "city": "Local",
+        "region": "Local"
+      },
+      "referer": "",
+      "acceptLanguage": "en-US,en;q=0.9",
+      "acceptEncoding": "gzip, deflate, br, zstd",
+      "path": "/",
+      "method": "GET",
+      "query": {},
+      "headers": {
+        "host": "localhost:3000"
+      },
+      "firstVisit": "2025-09-04T05:32:00.257Z",
+      "visitCount": 7,
+      "lastVisit": "2025-09-04T05:33:24.677Z",
+      "lastPath": "/api/analytics/export",
+      "lastUserAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+    }
+  ],
+  "lastUpdated": "2025-09-04T05:33:24.677Z"
+}

@@ -3,6 +3,7 @@ import path from 'path';
 import cors from 'cors';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import crypto from 'crypto';
 
 // ES module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -11,6 +12,26 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Visitor Analytics Configuration
+const ANALYTICS_DIR = path.join(__dirname, 'analytics');
+const VISITOR_LOG_FILE = path.join(ANALYTICS_DIR, 'visitors.json');
+const DAILY_STATS_FILE = path.join(ANALYTICS_DIR, 'daily-stats.json');
+const DATA_RETENTION_DAYS = 90; // Keep data for 90 days
+
+// Ensure analytics directory exists
+if (!fs.existsSync(ANALYTICS_DIR)) {
+  fs.mkdirSync(ANALYTICS_DIR, { recursive: true });
+}
+
+// Initialize visitor data files if they don't exist
+if (!fs.existsSync(VISITOR_LOG_FILE)) {
+  fs.writeFileSync(VISITOR_LOG_FILE, JSON.stringify({ visitors: [], lastUpdated: new Date().toISOString() }));
+}
+
+if (!fs.existsSync(DAILY_STATS_FILE)) {
+  fs.writeFileSync(DAILY_STATS_FILE, JSON.stringify({ dailyStats: {}, lastUpdated: new Date().toISOString() }));
+}
+
 // API Configuration
 const GEMINI_API_KEY = 'AIzaSyDQ0hHwvbzw3b-X-SAbcR_q5wNAQ_AySCU';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
@@ -18,6 +39,20 @@ const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
+
+// Visitor logging middleware
+app.use((req, res, next) => {
+  // Skip logging for static assets and API health checks
+  if (req.path.startsWith('/assets/') || 
+      req.path.startsWith('/api/health') ||
+      req.path.includes('.')) {
+    return next();
+  }
+  
+  // Log visitor data
+  logVisitor(req);
+  next();
+});
 // Serve static files from current directory (when copied to dist) or dist directory (when in root)
 const staticPath = fs.existsSync(path.join(__dirname, 'assets')) 
   ? __dirname 
@@ -39,6 +74,194 @@ function isRateLimited(clientId) {
   apiCallTimes.set(clientId, now);
   return false;
 }
+
+// Visitor Analytics Functions
+function generateVisitorId(ip, userAgent) {
+  const combined = `${ip}-${userAgent}`;
+  return crypto.createHash('sha256').update(combined).digest('hex').substring(0, 16);
+}
+
+function parseUserAgent(userAgent) {
+  const ua = userAgent || '';
+  const browser = ua.includes('Chrome') ? 'Chrome' : 
+                  ua.includes('Firefox') ? 'Firefox' : 
+                  ua.includes('Safari') ? 'Safari' : 
+                  ua.includes('Edge') ? 'Edge' : 'Other';
+  
+  const os = ua.includes('Windows') ? 'Windows' : 
+             ua.includes('Mac') ? 'macOS' : 
+             ua.includes('Linux') ? 'Linux' : 
+             ua.includes('Android') ? 'Android' : 
+             ua.includes('iOS') ? 'iOS' : 'Other';
+  
+  const device = ua.includes('Mobile') ? 'Mobile' : 
+                 ua.includes('Tablet') ? 'Tablet' : 'Desktop';
+  
+  return { browser, os, device };
+}
+
+function getLocationFromIP(ip) {
+  // For production, you might want to use a service like ipapi.co or ipinfo.io
+  // For now, we'll return basic info
+  if (ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1') {
+    return { country: 'Local', city: 'Local', region: 'Local' };
+  }
+  
+  // Extract basic info from IP (this is simplified - in production use a proper service)
+  return { country: 'Unknown', city: 'Unknown', region: 'Unknown' };
+}
+
+function logVisitor(req) {
+  try {
+    const ip = req.ip || req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+    const userAgent = req.get('User-Agent') || '';
+    const referer = req.get('Referer') || '';
+    const acceptLanguage = req.get('Accept-Language') || '';
+    const acceptEncoding = req.get('Accept-Encoding') || '';
+    
+    const visitorId = generateVisitorId(ip, userAgent);
+    const { browser, os, device } = parseUserAgent(userAgent);
+    const location = getLocationFromIP(ip);
+    
+    const visitorData = {
+      id: visitorId,
+      timestamp: new Date().toISOString(),
+      ip: ip,
+      userAgent: userAgent,
+      browser: browser,
+      os: os,
+      device: device,
+      location: location,
+      referer: referer,
+      acceptLanguage: acceptLanguage,
+      acceptEncoding: acceptEncoding,
+      path: req.path,
+      method: req.method,
+      query: req.query,
+      headers: {
+        'x-forwarded-for': req.get('X-Forwarded-For'),
+        'x-real-ip': req.get('X-Real-IP'),
+        'cf-connecting-ip': req.get('CF-Connecting-IP'),
+        'x-forwarded-proto': req.get('X-Forwarded-Proto'),
+        'host': req.get('Host')
+      }
+    };
+    
+    // Read current visitor data
+    const visitorLogData = JSON.parse(fs.readFileSync(VISITOR_LOG_FILE, 'utf8'));
+    
+    // Check if this is a new visitor or returning visitor
+    const existingVisitor = visitorLogData.visitors.find(v => v.id === visitorId);
+    
+    if (existingVisitor) {
+      // Update existing visitor
+      existingVisitor.lastVisit = new Date().toISOString();
+      existingVisitor.visitCount = (existingVisitor.visitCount || 1) + 1;
+      existingVisitor.lastPath = req.path;
+      existingVisitor.lastUserAgent = userAgent;
+    } else {
+      // Add new visitor
+      visitorData.firstVisit = new Date().toISOString();
+      visitorData.visitCount = 1;
+      visitorLogData.visitors.push(visitorData);
+    }
+    
+    // Update last updated timestamp
+    visitorLogData.lastUpdated = new Date().toISOString();
+    
+    // Write back to file
+    fs.writeFileSync(VISITOR_LOG_FILE, JSON.stringify(visitorLogData, null, 2));
+    
+    // Update daily stats
+    updateDailyStats(visitorData);
+    
+  } catch (error) {
+    console.error('Error logging visitor:', error);
+  }
+}
+
+function updateDailyStats(visitorData) {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const dailyStatsData = JSON.parse(fs.readFileSync(DAILY_STATS_FILE, 'utf8'));
+    
+    if (!dailyStatsData.dailyStats[today]) {
+      dailyStatsData.dailyStats[today] = {
+        date: today,
+        totalVisits: 0,
+        uniqueVisitors: 0,
+        browsers: {},
+        os: {},
+        devices: {},
+        countries: {},
+        paths: {},
+        referers: {}
+      };
+    }
+    
+    const dayStats = dailyStatsData.dailyStats[today];
+    dayStats.totalVisits++;
+    
+    // Count unique visitors (simplified - in production you'd want more sophisticated tracking)
+    if (!dayStats.uniqueVisitors) dayStats.uniqueVisitors = 0;
+    dayStats.uniqueVisitors++;
+    
+    // Count browsers
+    dayStats.browsers[visitorData.browser] = (dayStats.browsers[visitorData.browser] || 0) + 1;
+    
+    // Count OS
+    dayStats.os[visitorData.os] = (dayStats.os[visitorData.os] || 0) + 1;
+    
+    // Count devices
+    dayStats.devices[visitorData.device] = (dayStats.devices[visitorData.device] || 0) + 1;
+    
+    // Count countries
+    dayStats.countries[visitorData.location.country] = (dayStats.countries[visitorData.location.country] || 0) + 1;
+    
+    // Count paths
+    dayStats.paths[visitorData.path] = (dayStats.paths[visitorData.path] || 0) + 1;
+    
+    // Count referers
+    const referer = visitorData.referer || 'Direct';
+    dayStats.referers[referer] = (dayStats.referers[referer] || 0) + 1;
+    
+    dailyStatsData.lastUpdated = new Date().toISOString();
+    fs.writeFileSync(DAILY_STATS_FILE, JSON.stringify(dailyStatsData, null, 2));
+    
+  } catch (error) {
+    console.error('Error updating daily stats:', error);
+  }
+}
+
+function cleanupOldData() {
+  try {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - DATA_RETENTION_DAYS);
+    
+    // Clean up visitor data
+    const visitorLogData = JSON.parse(fs.readFileSync(VISITOR_LOG_FILE, 'utf8'));
+    visitorLogData.visitors = visitorLogData.visitors.filter(visitor => {
+      const visitDate = new Date(visitor.timestamp || visitor.firstVisit);
+      return visitDate > cutoffDate;
+    });
+    fs.writeFileSync(VISITOR_LOG_FILE, JSON.stringify(visitorLogData, null, 2));
+    
+    // Clean up daily stats
+    const dailyStatsData = JSON.parse(fs.readFileSync(DAILY_STATS_FILE, 'utf8'));
+    Object.keys(dailyStatsData.dailyStats).forEach(date => {
+      if (new Date(date) < cutoffDate) {
+        delete dailyStatsData.dailyStats[date];
+      }
+    });
+    fs.writeFileSync(DAILY_STATS_FILE, JSON.stringify(dailyStatsData, null, 2));
+    
+  } catch (error) {
+    console.error('Error cleaning up old data:', error);
+  }
+}
+
+// Run cleanup on startup
+cleanupOldData();
 
 // Load life events data
 let lifeEventsData = {};
@@ -198,6 +421,151 @@ app.get('/api/health', (req, res) => {
     server: 'Kundan Ray Resume Server',
     version: '1.0.0'
   });
+});
+
+// Analytics endpoints
+app.get('/api/analytics/visitors', (req, res) => {
+  try {
+    const visitorLogData = JSON.parse(fs.readFileSync(VISITOR_LOG_FILE, 'utf8'));
+    
+    // Return summary data (not full visitor details for privacy)
+    const summary = {
+      totalVisitors: visitorLogData.visitors.length,
+      lastUpdated: visitorLogData.lastUpdated,
+      recentVisitors: visitorLogData.visitors
+        .sort((a, b) => new Date(b.timestamp || b.lastVisit) - new Date(a.timestamp || a.firstVisit))
+        .slice(0, 50)
+        .map(visitor => ({
+          id: visitor.id,
+          firstVisit: visitor.firstVisit,
+          lastVisit: visitor.lastVisit,
+          visitCount: visitor.visitCount,
+          browser: visitor.browser,
+          os: visitor.os,
+          device: visitor.device,
+          location: visitor.location,
+          lastPath: visitor.lastPath
+        }))
+    };
+    
+    res.json(summary);
+  } catch (error) {
+    console.error('Error fetching visitor data:', error);
+    res.status(500).json({ error: 'Failed to fetch visitor data' });
+  }
+});
+
+app.get('/api/analytics/daily-stats', (req, res) => {
+  try {
+    const dailyStatsData = JSON.parse(fs.readFileSync(DAILY_STATS_FILE, 'utf8'));
+    
+    // Get last 30 days of stats
+    const last30Days = {};
+    const today = new Date();
+    
+    for (let i = 0; i < 30; i++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      
+      if (dailyStatsData.dailyStats[dateStr]) {
+        last30Days[dateStr] = dailyStatsData.dailyStats[dateStr];
+      }
+    }
+    
+    res.json({
+      last30Days,
+      lastUpdated: dailyStatsData.lastUpdated
+    });
+  } catch (error) {
+    console.error('Error fetching daily stats:', error);
+    res.status(500).json({ error: 'Failed to fetch daily stats' });
+  }
+});
+
+app.get('/api/analytics/summary', (req, res) => {
+  try {
+    const visitorLogData = JSON.parse(fs.readFileSync(VISITOR_LOG_FILE, 'utf8'));
+    const dailyStatsData = JSON.parse(fs.readFileSync(DAILY_STATS_FILE, 'utf8'));
+    
+    // Calculate summary statistics
+    const totalVisitors = visitorLogData.visitors.length;
+    const totalVisits = visitorLogData.visitors.reduce((sum, visitor) => sum + (visitor.visitCount || 1), 0);
+    
+    // Browser distribution
+    const browserStats = {};
+    const osStats = {};
+    const deviceStats = {};
+    const countryStats = {};
+    
+    visitorLogData.visitors.forEach(visitor => {
+      browserStats[visitor.browser] = (browserStats[visitor.browser] || 0) + 1;
+      osStats[visitor.os] = (osStats[visitor.os] || 0) + 1;
+      deviceStats[visitor.device] = (deviceStats[visitor.device] || 0) + 1;
+      countryStats[visitor.location.country] = (countryStats[visitor.location.country] || 0) + 1;
+    });
+    
+    // Recent activity (last 7 days)
+    const last7Days = {};
+    const today = new Date();
+    
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      
+      if (dailyStatsData.dailyStats[dateStr]) {
+        last7Days[dateStr] = dailyStatsData.dailyStats[dateStr];
+      }
+    }
+    
+    const summary = {
+      overview: {
+        totalVisitors,
+        totalVisits,
+        averageVisitsPerVisitor: totalVisitors > 0 ? (totalVisits / totalVisitors).toFixed(2) : 0,
+        lastUpdated: visitorLogData.lastUpdated
+      },
+      distribution: {
+        browsers: browserStats,
+        operatingSystems: osStats,
+        devices: deviceStats,
+        countries: countryStats
+      },
+      recentActivity: last7Days
+    };
+    
+    res.json(summary);
+  } catch (error) {
+    console.error('Error generating analytics summary:', error);
+    res.status(500).json({ error: 'Failed to generate analytics summary' });
+  }
+});
+
+// Admin endpoint to export all data (for backup purposes)
+app.get('/api/analytics/export', (req, res) => {
+  try {
+    const visitorLogData = JSON.parse(fs.readFileSync(VISITOR_LOG_FILE, 'utf8'));
+    const dailyStatsData = JSON.parse(fs.readFileSync(DAILY_STATS_FILE, 'utf8'));
+    
+    const exportData = {
+      exportDate: new Date().toISOString(),
+      visitors: visitorLogData,
+      dailyStats: dailyStatsData,
+      metadata: {
+        dataRetentionDays: DATA_RETENTION_DAYS,
+        totalVisitors: visitorLogData.visitors.length,
+        exportVersion: '1.0'
+      }
+    };
+    
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="analytics-export-${new Date().toISOString().split('T')[0]}.json"`);
+    res.json(exportData);
+  } catch (error) {
+    console.error('Error exporting analytics data:', error);
+    res.status(500).json({ error: 'Failed to export analytics data' });
+  }
 });
 
 // SEO and Meta Tags for SPA
@@ -362,6 +730,13 @@ app.listen(PORT, () => {
   console.log(`🌍 Server ready at http://localhost:${PORT}`);
   console.log(`🤖 AI Chat API available at /api/chat-assistant`);
   console.log(`🏥 Health check at /api/health`);
+  console.log(`📊 Analytics endpoints:`);
+  console.log(`   - /api/analytics/summary - Overview statistics`);
+  console.log(`   - /api/analytics/visitors - Visitor details`);
+  console.log(`   - /api/analytics/daily-stats - Daily statistics`);
+  console.log(`   - /api/analytics/export - Export all data`);
+  console.log(`📁 Analytics data stored in: ${ANALYTICS_DIR}`);
+  console.log(`🗑️  Data retention: ${DATA_RETENTION_DAYS} days`);
 });
 
 export default app;

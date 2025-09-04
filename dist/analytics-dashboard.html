@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visitor Analytics Dashboard - Kundan Ray</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.8;
+            font-size: 1.1rem;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 4px solid #667eea;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        
+        .chart-container {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .bar-chart {
+            display: flex;
+            align-items: end;
+            height: 200px;
+            gap: 10px;
+        }
+        
+        .bar {
+            flex: 1;
+            background: linear-gradient(to top, #667eea, #764ba2);
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            min-height: 20px;
+        }
+        
+        .bar-label {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8rem;
+            color: #6c757d;
+            white-space: nowrap;
+        }
+        
+        .bar-value {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .visitor-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+        }
+        
+        .visitor-item {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .visitor-item:last-child {
+            border-bottom: none;
+        }
+        
+        .visitor-info {
+            flex: 1;
+        }
+        
+        .visitor-id {
+            font-weight: bold;
+            color: #2c3e50;
+            font-family: monospace;
+        }
+        
+        .visitor-details {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .visitor-stats {
+            text-align: right;
+            font-size: 0.9rem;
+        }
+        
+        .visits-count {
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            transition: background 0.3s;
+        }
+        
+        .refresh-btn:hover {
+            background: #5a6fd8;
+        }
+        
+        .last-updated {
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Visitor Analytics</h1>
+            <p>Real-time insights into your website visitors</p>
+        </div>
+        
+        <div class="content">
+            <button class="refresh-btn" onclick="loadAnalytics()">🔄 Refresh Data</button>
+            
+            <div id="error-container"></div>
+            <div id="loading" class="loading">Loading analytics data...</div>
+            
+            <div id="analytics-content" style="display: none;">
+                <div class="stats-grid" id="stats-grid">
+                    <!-- Stats will be populated here -->
+                </div>
+                
+                <div class="section">
+                    <h2>🌍 Geographic Distribution</h2>
+                    <div class="chart-container">
+                        <div class="bar-chart" id="countries-chart">
+                            <!-- Country chart will be populated here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2>💻 Browser Distribution</h2>
+                    <div class="chart-container">
+                        <div class="bar-chart" id="browsers-chart">
+                            <!-- Browser chart will be populated here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2>📱 Device Types</h2>
+                    <div class="chart-container">
+                        <div class="bar-chart" id="devices-chart">
+                            <!-- Device chart will be populated here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2>👥 Recent Visitors</h2>
+                    <div class="visitor-list" id="visitors-list">
+                        <!-- Visitors will be populated here -->
+                    </div>
+                </div>
+                
+                <div class="last-updated" id="last-updated">
+                    <!-- Last updated time will be shown here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadAnalytics() {
+            const loading = document.getElementById('loading');
+            const content = document.getElementById('analytics-content');
+            const errorContainer = document.getElementById('error-container');
+            
+            loading.style.display = 'block';
+            content.style.display = 'none';
+            errorContainer.innerHTML = '';
+            
+            try {
+                const response = await fetch('/api/analytics/summary');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                displayAnalytics(data);
+                
+                loading.style.display = 'none';
+                content.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+                errorContainer.innerHTML = `<div class="error">Error loading analytics: ${error.message}</div>`;
+                loading.style.display = 'none';
+            }
+        }
+        
+        function displayAnalytics(data) {
+            // Display overview stats
+            const statsGrid = document.getElementById('stats-grid');
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${data.overview.totalVisitors}</div>
+                    <div class="stat-label">Total Visitors</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${data.overview.totalVisits}</div>
+                    <div class="stat-label">Total Visits</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${data.overview.averageVisitsPerVisitor}</div>
+                    <div class="stat-label">Avg Visits/Visitor</div>
+                </div>
+            `;
+            
+            // Display country distribution
+            displayChart('countries-chart', data.distribution.countries, 'Countries');
+            
+            // Display browser distribution
+            displayChart('browsers-chart', data.distribution.browsers, 'Browsers');
+            
+            // Display device distribution
+            displayChart('devices-chart', data.distribution.devices, 'Devices');
+            
+            // Display recent visitors
+            loadRecentVisitors();
+            
+            // Display last updated time
+            document.getElementById('last-updated').textContent = 
+                `Last updated: ${new Date(data.overview.lastUpdated).toLocaleString()}`;
+        }
+        
+        function displayChart(containerId, data, title) {
+            const container = document.getElementById(containerId);
+            const maxValue = Math.max(...Object.values(data));
+            
+            container.innerHTML = Object.entries(data)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 8) // Show top 8 items
+                .map(([label, value]) => {
+                    const height = (value / maxValue) * 100;
+                    return `
+                        <div class="bar" style="height: ${height}%">
+                            <div class="bar-value">${value}</div>
+                            <div class="bar-label">${label}</div>
+                        </div>
+                    `;
+                }).join('');
+        }
+        
+        async function loadRecentVisitors() {
+            try {
+                const response = await fetch('/api/analytics/visitors');
+                const data = await response.json();
+                
+                const visitorsList = document.getElementById('visitors-list');
+                visitorsList.innerHTML = data.recentVisitors.map(visitor => `
+                    <div class="visitor-item">
+                        <div class="visitor-info">
+                            <div class="visitor-id">${visitor.id}</div>
+                            <div class="visitor-details">
+                                ${visitor.browser} on ${visitor.os} • ${visitor.device} • ${visitor.location.country}
+                            </div>
+                        </div>
+                        <div class="visitor-stats">
+                            <div class="visits-count">${visitor.visitCount} visits</div>
+                            <div style="font-size: 0.8rem; color: #6c757d;">
+                                Last: ${new Date(visitor.lastVisit).toLocaleDateString()}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error loading visitors:', error);
+                document.getElementById('visitors-list').innerHTML = 
+                    '<div class="error">Error loading visitor data</div>';
+            }
+        }
+        
+        // Load analytics on page load
+        document.addEventListener('DOMContentLoaded', loadAnalytics);
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadAnalytics, 30000);
+    </script>
+</body>
+</html>

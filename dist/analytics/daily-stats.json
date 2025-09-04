@@ -1,0 +1,31 @@
+{
+  "dailyStats": {
+    "2025-09-04": {
+      "date": "2025-09-04",
+      "totalVisits": 7,
+      "uniqueVisitors": 7,
+      "browsers": {
+        "Chrome": 7
+      },
+      "os": {
+        "macOS": 7
+      },
+      "devices": {
+        "Desktop": 7
+      },
+      "countries": {
+        "Local": 7
+      },
+      "paths": {
+        "/": 1,
+        "/api/analytics/summary": 1,
+        "/api/analytics/visitors": 4,
+        "/api/analytics/export": 1
+      },
+      "referers": {
+        "Direct": 7
+      }
+    }
+  },
+  "lastUpdated": "2025-09-04T05:33:24.678Z"
+}
